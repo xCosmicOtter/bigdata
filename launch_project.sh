@@ -1,7 +1,7 @@
 # Delete the docker compose images
 cd docker
 docker compose down
-echo "Deleting docker compose images. Done."
+echo "Shutting down docker compose images. Done."
 
 # Make analyzer again
 echo -n "Make: analyzer. "
@@ -15,6 +15,6 @@ cd ../dashboard
 make > /dev/null 2>&1
 echo "Done."
 
-# Docker compose up (unique usage)
+# Docker compose up
 cd ..
-docker compose up -d
+docker compose up
