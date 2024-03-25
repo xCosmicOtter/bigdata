@@ -172,7 +172,7 @@ class TimescaleStockMarketModel:
         cursor.execute(query, args)
         return cursor.fetchall()
 
-    def df_query(self, query, args=None, index_col=None, coerce_float=True, params=None, 
+    def df_query(self, query, args=None, index_col=None, coerce_float=True, params=None,
                  parse_dates=None, columns=None, chunksize=1000, dtype=None):
         '''Returns a Pandas dataframe from a Postgres SQL query
 
@@ -184,8 +184,8 @@ class TimescaleStockMarketModel:
         if args is not None:
             query = query % args
         self.logger.debug('df_query: %s' % query)
-        return pd.read_sql(query, self.__engine, index_col=index_col, coerce_float=coerce_float, 
-                           params=params, parse_dates=parse_dates, columns=columns, 
+        return pd.read_sql(query, self.__engine, index_col=index_col, coerce_float=coerce_float,
+                           params=params, parse_dates=parse_dates, columns=columns,
                            chunksize=chunksize, dtype=dtype)
 
     # system methods
@@ -234,11 +234,11 @@ class TimescaleStockMarketModel:
         else:
             return 0
 
-    def is_file_done(name):
+    def is_file_done(self, name):
         '''
         Check if a file has already been included in the DB
         '''
-        return  self.raw_query("SELECT EXISTS ( SELECT 1 FROM file_done WHERE nom = '%s' );" % name)
+        return  self.raw_query("SELECT EXISTS ( SELECT 1 FROM file_done WHERE name = '%s' );" % name)[0][0]
 
 
 #
