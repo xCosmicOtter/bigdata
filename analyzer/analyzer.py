@@ -167,8 +167,8 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
 def main() -> None:
     # MAIN ARGS
     files_count = 0
-    data_path = "../docker/data"
-
+    data_path = "data"
+    
     # MAIN PROCESS
     logger.debug(f"Work in progress...")
     starting_time = time.time()
