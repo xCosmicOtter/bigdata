@@ -6,7 +6,6 @@ import multiprocessing
 from glob import glob
 from datetime import datetime
 from logzero import logger
-from tqdm import tqdm
 from collections import defaultdict
 
 import timescaledb_model as tsdb
@@ -35,7 +34,7 @@ def get_market_id(market_name: str) -> int:
     get_id = db.raw_query(f"SELECT id FROM markets WHERE alias = '{market_name}'")
     return int(get_id[0][0]) if len(get_id) != 0 else None
 
-def get_companies_id():
+def get_companies_id() -> pd.DataFrame:
     return db.df_query('SELECT id, symbol FROM companies', chunksize=None)
 
 
@@ -120,7 +119,7 @@ def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None: #T
 # ---- MultiProcessing file reading ---- #
 num_processes = multiprocessing.cpu_count()
 
-def read_file(filename_index_pair):
+def read_file(filename_index_pair: tuple) -> tuple:
     index, filename = filename_index_pair
     return index, parse_filename(filename), pd.read_pickle(filename)
 
@@ -149,19 +148,6 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     for _, key, value in sorted_results:
         data[key] = value
     logger.debug(f"MULTITHREADING: Time taken to read files {time.time() - start}")
-
-    """ # OLD PROCESS
-
-    start = time.time()
-    for filename in files:
-        #if db.is_file_done(filename): # TODO: add when PC has low memory
-        #    continue
-
-        # Add in final fidctionary
-        data[parse_filename(filename)] = pd.read_pickle(filename)
-    logger.debug(f"Time taken to read files {time.time() - start}")
-
-    """
 
     # CONCAT FINAL DATA
     start = time.time()
