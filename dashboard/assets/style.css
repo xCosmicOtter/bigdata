@@ -413,3 +413,105 @@ there.
 
 /* Larger than Desktop HD */
 @media (min-width: 1200px) {}
+
+/* Custom App CSS
+-------------------------------------------------- */
+
+body{
+  background-color: #1a1c23;
+  color: #b2b2b2;
+  height: 100vh;
+  margin: 0;
+}
+
+.logo{
+  width: 50%;
+  max-width: 50px;
+  margin-right: 20px;
+}
+
+.logo-text{
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.logo-text p {
+  margin: 0;
+}
+
+.div-left-panel{
+  background-color: #22252b;
+  color: #b2b2b2;
+  margin: 0px;
+  height:100vh;
+  padding: 32px;
+  /*overflow-y: scroll;*/
+}
+
+.project-description p{
+  font-size: 12px ;
+}
+
+.div-right-panel{
+  padding: 80px 64px 64px 32px;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: space-between; /* Pour espacer les éléments horizontalement */
+}
+
+.search-bar {
+  flex: 3;/* Pour que la première partie occupe 3 unités de l'espace disponible */
+  padding-right: 20px;
+}
+
+.chart-options {
+  flex: 1; /* Pour que la deuxième partie occupe 1 unité de l'espace disponible */
+}
+
+.tab-selected-style {
+  border-bottom: 3px solid #119DFF !important;
+  color:#119DFF !important;
+  background-color: transparent !important;
+}
+
+.tab-style {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-left {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-left: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-right {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-right: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-sep {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-right: 1px dotted rgb(168, 162, 162) !important;
+}
+
+.visible {
+  display: block;
+  position: absolute;
+  overflow: auto;
+  z-index: 20;
+  border-color: 1px solid  white !important;
+  background: #22252b;
+  padding: 20px;
+}
+
+.not-visible{
+  display: none;
+  position: absolute;
+}
+
+input[type="radio"] {
+  left: -999em;
+  position: absolute;
+}
