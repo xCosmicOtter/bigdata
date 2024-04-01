@@ -129,12 +129,12 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
 
         # Add in final fidctionary
         data[parse_filename(filename)] = pd.read_pickle(filename)
-    logger.debug("Time taken to read files", time.time() - start)
+    logger.debug(f"Time taken to read files {time.time() - start}")
 
     # CONCAT FINAL DATA
     start = time.time()
     df = pd.concat(data).reset_index(level=1, drop=True)
-    logger.debug("Time taken to concat files", time.time() - start)
+    logger.debug(f"Time taken to concat files {time.time() - start}")
 
     # CLEAN DATA
     df.drop_duplicates(inplace=True)
@@ -145,22 +145,22 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
 
     start = time.time()
     compute_companies(df, website, market_id, market_name)
-    logger.debug("Time taken to compute companies", time.time() - start)
+    logger.debug(f"Time taken to compute companies {time.time() - start}")
 
     compagnies_df = get_companies_id()
 
     start = time.time()
     compute_stocks(df, compagnies_df)
-    logger.debug("Time taken to compute stocks", time.time() - start)
+    logger.debug(f"Time taken to compute stocks {time.time() - start}")
 
     start = time.time()
     compute_daystocks(df, compagnies_df)
-    logger.debug("Time taken to compute daystocks", time.time() - start)
+    logger.debug(f"Time taken to compute daystocks {time.time() - start}")
 
     # Write the files as processed
     start = time.time()
     db.df_write(pd.DataFrame({'name': files}), "file_done", commit=True, index=False)
-    logger.debug("Time taken to save done files", time.time() - start)
+    logger.debug(f"Time taken to save done files {time.time() - start}")
 
 
 # ---- Main loop ---- #
