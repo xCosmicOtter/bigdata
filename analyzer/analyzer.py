@@ -5,8 +5,6 @@ import os
 from glob import glob
 from datetime import datetime
 from logzero import logger
-from IPython.display import display, HTML
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from collections import defaultdict
 
