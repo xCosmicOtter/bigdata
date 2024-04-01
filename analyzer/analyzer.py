@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import os
+import multiprocessing
 from glob import glob
 from datetime import datetime
 from logzero import logger
@@ -41,7 +42,7 @@ def get_companies_id():
 # ---- SQL requests functions ---- #
 companies_dict = defaultdict(set)
 
-def compute_companies(df, stock_name: str, market_id: int, market_name: str) -> None:
+def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_name: str) -> None:
     companies_df = df[['name','symbol']].copy().drop_duplicates()
     companies_df.reset_index(drop=True, inplace=True)
     companies_df['mid'] = market_id
@@ -75,7 +76,7 @@ def compute_companies(df, stock_name: str, market_id: int, market_name: str) -> 
     logger.debug(f"Applying filter -> before: {before_filter} elts && after: {len(companies_df.symbol)} elts")
     db.df_write(companies_df, "companies", commit=True, index=False)
 
-def compute_stocks(df, compagnies_df: pd.DataFrame) -> None:
+def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None:
     stock_df = df[['symbol', 'last', 'volume']].copy().drop_duplicates()
     stock_df.reset_index(names='date', inplace=True)
 
@@ -88,7 +89,7 @@ def compute_stocks(df, compagnies_df: pd.DataFrame) -> None:
     # Write inside table
     db.df_write(stock_df, 'stocks', commit=True, index=False)
 
-def compute_daystocks(df, compagnies_df): #TODO: Drop duplicate??
+def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None: #TODO: Drop duplicate??
     daystocks_df = df.copy()
 
     daystocks_df.reset_index(names="timestamp", inplace=True)
@@ -116,12 +117,41 @@ def compute_daystocks(df, compagnies_df): #TODO: Drop duplicate??
     db.df_write(daystocks_df, "daystocks", commit=True, index=False)
 
 
+# ---- MultiProcessing file reading ---- #
+num_processes = multiprocessing.cpu_count()
+
+def read_file(filename_index_pair):
+    index, filename = filename_index_pair
+    return index, parse_filename(filename), pd.read_pickle(filename)
+
+
 # ---- Store files ---- #
 def store_file(files: list, website: str, market_name: str, market_id: int) -> None:
     if website.lower() != "boursorama":
         return
 
     data = {}
+
+    start = time.time()
+    filenames_with_index = list(enumerate(files))
+
+    pool = multiprocessing.Pool(processes=num_processes)
+    results = pool.map(read_file, filenames_with_index)
+
+    # Close and release resources
+    pool.close()
+    pool.join()
+
+    # Sort the results by the original index
+    sorted_results = sorted(results, key=lambda x: x[0])
+
+    # Add the sorted results into the data dictionary
+    for _, key, value in sorted_results:
+        data[key] = value
+    logger.debug(f"MULTITHREADING: Time taken to read files {time.time() - start}")
+
+    """ # OLD PROCESS
+
     start = time.time()
     for filename in files:
         #if db.is_file_done(filename): # TODO: add when PC has low memory
@@ -130,6 +160,8 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
         # Add in final fidctionary
         data[parse_filename(filename)] = pd.read_pickle(filename)
     logger.debug(f"Time taken to read files {time.time() - start}")
+
+    """
 
     # CONCAT FINAL DATA
     start = time.time()
@@ -168,7 +200,7 @@ def main() -> None:
     # MAIN ARGS
     files_count = 0
     data_path = "data"
-    
+
     # MAIN PROCESS
     logger.debug(f"Work in progress...")
     starting_time = time.time()
@@ -200,7 +232,7 @@ def main() -> None:
                 market_starting_time = time.time()
 
                 market_id = get_market_id(market_name)
-                for month, files_list in tqdm(sorted(month_dict.items(), reverse=True)):
+                for month, files_list in sorted(month_dict.items(), reverse=True):
                     files_count += len(files_list)
 
                     store_file(files_list, stock, market_name, market_id)

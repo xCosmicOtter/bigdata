@@ -13,7 +13,8 @@ DATABASE_URI = 'timescaledb://ricou:monmdp@db:5432/bourse'    # inside docker
 # DATABASE_URI = 'timescaledb://ricou:monmdp@localhost:5432/bourse'  # outisde docker
 engine = sqlalchemy.create_engine(DATABASE_URI)
 
-query='''SELECT date, high from daystocks where cid = 105 order by date'''
+#query='''SELECT date, high from daystocks where cid = 105 order by date'''
+query='''SELECT * from daystocks'''
 df = pd.read_sql_query(query,engine)
 
 fig = px.line(df, x='date', y=['high'], title='Stock Prices')
