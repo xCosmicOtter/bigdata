@@ -13,7 +13,7 @@ import mylogging
 class TimescaleStockMarketModel:
     """ Bourse model with TimeScaleDB persistence."""
 
-    def __init__(self, database, user=None, host=None, password=None, port=None):
+    def __init__(self, database, user=None, host=None, password=None, port=None, is_sub=False):
         """Create a TimescaleStockMarketModel
 
         database -- The name of the persistence database.
@@ -21,8 +21,10 @@ class TimescaleStockMarketModel:
                     database name by default.
 
         """
-
-        self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log")
+        if is_sub:
+            self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log", init_verbose=False)
+        else:
+            self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log")
 
         self.__database = database
         self.__user = user or database
@@ -39,8 +41,9 @@ class TimescaleStockMarketModel:
         self.__boursorama_cid = {}  # cid from netfonds symbol
         self.__market_id = {}  # id of markets from aliases
 
-        self.logger.info("Setup database generates an error if it exists already, it's ok")
-        self._setup_database()
+        if not is_sub:
+            self.logger.info("Setup database generates an error if it exists already, it's ok")
+            self._setup_database()
 
 
     def _setup_database(self):
