@@ -17,13 +17,17 @@ db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'db', 'monmdp')        # 
 def parse_filename(filename: str) -> datetime:
     return datetime.strptime(filename[-30:-4], "%Y-%m-%d %H:%M:%S.%f")
 
-def erase_c(df: pd.DataFrame) -> pd.DataFrame:
+def clean_values_volumes(df: pd.DataFrame) -> None:
+    # Clean values
     df['last'] = df['last'].astype(str)
     df['last'] = df['last'].str.replace('(c)', '')
     df['last'] = df['last'].str.replace('(s)', '')
     df['last'] = df['last'].str.replace(' ', '')
     df['last'] = df['last'].astype(float)
-    return df
+
+    # Clean volumes
+    overflow_mask = df['volume'] > 2147483647
+    df.loc[overflow_mask, 'volume'] = np.iinfo(np.int32).max
 
 def custom_sort_key(file_path: str) -> str:
     return file_path[-22:-4]
@@ -75,7 +79,7 @@ def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_
     logger.debug(f"Applying filter -> before: {before_filter} elts && after: {len(companies_df.symbol)} elts")
     db.df_write(companies_df, "companies", commit=True, index=False)
 
-def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None:
+def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
     stock_df = df[['symbol', 'last', 'volume']].copy().drop_duplicates()
     stock_df.reset_index(names='date', inplace=True)
 
@@ -85,11 +89,11 @@ def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None:
     stock_df.rename(columns={'last': 'value', 'id': 'cid'}, inplace=True)
     stock_df['cid'] = stock_df['cid'].fillna(0)
 
-    # Write inside table
-    db.df_write(stock_df, 'stocks', commit=True, index=False)
+    # Write inside tables
+    sdb.df_write(stock_df, 'stocks', commit=True, index=False)
 
-def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None: #TODO: Drop duplicate??
-    daystocks_df = df.copy()
+def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
+    daystocks_df = df.copy()    #TODO: Drop duplicate??
 
     daystocks_df.reset_index(names="timestamp", inplace=True)
     grouped = daystocks_df.groupby(['symbol', daystocks_df['timestamp'].dt.date])
@@ -112,8 +116,8 @@ def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None: #T
     # Fill daystocks_df without cid with 0
     daystocks_df['cid'] = daystocks_df['cid'].fillna(0)
 
-    # Write inside table
-    db.df_write(daystocks_df, "daystocks", commit=True, index=False)
+    # Write inside tables
+    sdb.df_write(daystocks_df, "daystocks", commit=True, index=False)
 
 
 # ---- MultiProcessing file reading ---- #
@@ -123,16 +127,8 @@ def read_file(filename_index_pair: tuple) -> tuple:
     index, filename = filename_index_pair
     return index, parse_filename(filename), pd.read_pickle(filename)
 
-
-# ---- Store files ---- #
-def store_file(files: list, website: str, market_name: str, market_id: int) -> None:
-    if website.lower() != "boursorama":
-        return
-
+def read_files_multiprocessed(filenames_with_index: list) -> dict:
     data = {}
-
-    start = time.time()
-    filenames_with_index = list(enumerate(files))
 
     pool = multiprocessing.Pool(processes=num_processes)
     results = pool.map(read_file, filenames_with_index)
@@ -147,7 +143,40 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     # Add the sorted results into the data dictionary
     for _, key, value in sorted_results:
         data[key] = value
-    logger.debug(f"MULTITHREADING: Time taken to read files {time.time() - start}")
+    return data
+
+def process_data(args: tuple) -> None:
+    day_df, compagnies_df = args
+    sdb = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'db', 'monmdp', is_sub=True)
+    compute_stocks(day_df, compagnies_df, sdb)
+    compute_daystocks(day_df, compagnies_df, sdb)
+
+def compute_stocks_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None:
+    daily_infos = []
+    for _, day_df in df.groupby(pd.Grouper(freq='D')):
+        if day_df.empty:
+            continue
+
+        daily_infos.append((day_df, compagnies_df))
+
+    pool = multiprocessing.Pool(processes=num_processes)
+    pool.map(process_data, daily_infos)
+
+    # Close and release resources
+    pool.close()
+    pool.join()
+
+
+# ---- Store files ---- #
+def store_file(files: list, website: str, market_name: str, market_id: int) -> None:
+    if website.lower() != "boursorama":
+        return
+
+    # READ FILES DATA
+    start = time.time()
+    filenames_with_index = list(enumerate(files))
+    data = read_files_multiprocessed(filenames_with_index)
+    logger.debug(f"Time taken to read files [with M] {time.time() - start}")
 
     # CONCAT FINAL DATA
     start = time.time()
@@ -157,25 +186,21 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     # CLEAN DATA
     df.drop_duplicates(inplace=True)
     df.index = pd.to_datetime(df.index)
-    erase_c(df)
-    overflow_mask = df['volume'] > 2147483647
-    df.loc[overflow_mask, 'volume'] = np.iinfo(np.int32).max
+    clean_values_volumes(df)
 
+    # COMPUTE COMPANIES
     start = time.time()
     compute_companies(df, website, market_id, market_name)
     logger.debug(f"Time taken to compute companies {time.time() - start}")
 
     compagnies_df = get_companies_id()
 
+    # COMPUTE STOCKS and DAYSTOCKS
     start = time.time()
-    compute_stocks(df, compagnies_df)
-    logger.debug(f"Time taken to compute stocks {time.time() - start}")
+    compute_stocks_daystocks(df, compagnies_df)
+    logger.debug(f"Time taken to compute stocks/daystocks [with M] {time.time() - start}")
 
-    start = time.time()
-    compute_daystocks(df, compagnies_df)
-    logger.debug(f"Time taken to compute daystocks {time.time() - start}")
-
-    # Write the files as processed
+    # Check the files as processed
     start = time.time()
     db.df_write(pd.DataFrame({'name': files}), "file_done", commit=True, index=False)
     logger.debug(f"Time taken to save done files {time.time() - start}")
@@ -193,6 +218,7 @@ def main() -> None:
     for stock in os.listdir(data_path):
         stock_path = f"{data_path}/{stock}"
 
+        starting_year_time = time.time()
         for year in sorted(os.listdir(stock_path), reverse=True):
             market_pattern = f"{data_path}/{stock}/{year}/*"
 
@@ -224,11 +250,15 @@ def main() -> None:
                     store_file(files_list, stock, market_name, market_id)
 
                 subprocessing_time = round(time.time() - market_starting_time, 3)
-                logger.debug(f"Processing complete for {market_name} data in {year} in"
-                            f" {subprocessing_time} seconds.")
+                logger.debug(f"# = Processing complete for {market_name} data in {year} in"
+                            f" {subprocessing_time} seconds. = #")
+
+        yearprocessing_time = round(time.time() - starting_year_time, 3)
+        logger.debug(f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
 
     rounded_processing_time = round(time.time() - starting_time, 3)
     logger.debug(f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
 
 if __name__ == '__main__':
-    main()
+    #main()
+    print("Done")

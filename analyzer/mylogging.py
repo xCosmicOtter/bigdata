@@ -26,14 +26,14 @@ DEBUG = logging.DEBUG
 log_level = logging.DEBUG  # change this if you want a another default variable
 
 def getLogger(name, level=log_level,
-              filename=None, file_level=None):
+              filename=None, file_level=None, init_verbose=True):
     logger = logging.getLogger(name)
     logger.setLevel(level)
     # create formatter
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # create file handle if needed
     if filename is not None:
-        print("Logs of %s go to %s" % (name, filename))
+        print("Logs of %s go to %s" % (name, filename)) if init_verbose else None
         fh = logging.handlers.RotatingFileHandler(filename, maxBytes=10*1024*1024, backupCount=3)
         if file_level is None:
             fh.setLevel(level)
