@@ -5,7 +5,9 @@ import dash.dependencies as ddep
 import pandas as pd
 import sqlalchemy
 
+from datetime import date
 import plotly.express as px
+import plotly.graph_objs as go
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -15,7 +17,6 @@ engine = sqlalchemy.create_engine(DATABASE_URI)
 
 query='''SELECT date, high from daystocks where cid = 105 order by date'''
 df = pd.read_sql_query(query,engine)
-
 fig = px.line(df, x='date', y=['high'], title='Stock Prices')
 
 app = dash.Dash(__name__,  title="Bourse", suppress_callback_exceptions=True) # , external_stylesheets=external_stylesheets)
@@ -26,6 +27,13 @@ graph_options = [
     {"label": html.Span([html.Img(src="/assets/candlestick.png", height=30), html.Span("Bougies", style={'font-size': 15, 'padding-left': 10})]), "value": "candlestick"},
     {"label": html.Span([html.Img(src="/assets/area.png", height=30), html.Span("Aire", style={'font-size': 15, 'padding-left': 10})]), "value": "area"},
 ]
+
+def getAllName():
+    query = '''select name, symbol from companies;'''
+    df = pd.read_sql_query(query,engine)
+    name_symbol_tuple = list(zip(df['name'], df['symbol']))
+    list_name_symbol = [ name + ' ● ' + symbol for name, symbol in name_symbol_tuple]
+    return list_name_symbol
 
 app.layout = html.Div(children=[
     html.Div(
@@ -67,8 +75,7 @@ app.layout = html.Div(children=[
                     html.Div(
                         className='search-bar',
                         children=[
-                            dcc.Dropdown(['NYC', 'MTL', 'SF'], placeholder="Select a company", id='companyName'),
-                            html.Div(id='dd-output-graph')
+                            dcc.Dropdown(options=getAllName(), placeholder="Select a company", id='companyName')
                         ]
                     ),
                     html.Div(
@@ -84,11 +91,20 @@ app.layout = html.Div(children=[
                                     dcc.RadioItems(
                                         id='graph-type-dropdown',
                                         options=graph_options,
+                                        value='line'
                                     ),
                                 ],
                             ),
-                            # Div pour afficher le type de graphique sélectionné
-                            html.Div(id='selected-graph-type')
+                        ]
+                    ),
+                    html.Div(
+                        className='calendar',
+                        children=[
+                            dcc.DatePickerRange(
+                                month_format='D/M/Y',
+                                end_date_placeholder_text='JJ/MM/AAAA',
+                                start_date_placeholder_text='JJ/MM/AAAA'
+)
                         ]
                     )
                 ]
@@ -99,9 +115,7 @@ app.layout = html.Div(children=[
             },
         children=[
             dcc.Tab(label='1J',className='tab-style-left',selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure=fig
-                )
+                html.Div(id='dd-output-graph')
             ]),
 
             dcc.Tab(label='5J',className='tab-style-sep',selected_className='tab-selected-style', children=[
@@ -232,22 +246,36 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    ddep.Output('selected-graph-type', 'children'),
-    [ddep.Input('graph-type-dropdown', 'value')]
-)
-def display_selected_graph_type(selected_value):
-    if selected_value:
-        return f"Type de graphique sélectionné : {selected_value.capitalize()}"
-    else:
-        return ""
-
-
-@app.callback(
     ddep.Output('dd-output-graph', 'children'),
-    ddep.Input('companieName', 'value')
+    [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
-def update_output(value):
-    return f'{value} selected'
+def display_graph_by_name(value,graphType):
+    if (value != None):
+        value = value.split(" ● ")[1]
+        query=f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
+        df = pd.read_sql_query(query,engine)
+        if (graphType == 'line'):
+            fig = px.line(df, x='date', y=['high'], title='Stock Prices')
+        if (graphType == 'candlestick'):
+            trace = go.Candlestick(
+            x=df['date'],
+            open=df['open'],
+            high=df['high'],
+            low=df['low'],
+            close=df['close']
+            )
+            
+            # Create layout
+            layout = go.Layout(
+                title='Stock Prices',
+                xaxis=dict(title='Date'),
+                yaxis=dict(title='Price')
+            )
+            
+            # Create figure
+            fig = go.Figure(data=[trace], layout=layout)
+        return dcc.Graph(figure=fig)
+    return dcc.Graph()
 
 @app.callback( ddep.Output('query-result', 'children'),
                ddep.Input('execute-query', 'n_clicks'),

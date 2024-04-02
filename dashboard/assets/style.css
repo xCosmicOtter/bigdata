@@ -457,6 +457,26 @@ body{
   padding: 80px 64px 64px 32px;
 }
 
+.visible {
+  display: block;
+  position: absolute;
+  overflow: auto;
+  z-index: 20;
+  border-color: 1px solid  white !important;
+  background: #22252b;
+  padding: 20px;
+}
+
+.not-visible{
+  display: none;
+  position: absolute;
+}
+
+input[type="radio"] {
+  left: -999em;
+  position: absolute;
+}
+
 .flex-container {
   display: flex;
   justify-content: space-between; /* Pour espacer les éléments horizontalement */
@@ -469,6 +489,10 @@ body{
 
 .chart-options {
   flex: 1; /* Pour que la deuxième partie occupe 1 unité de l'espace disponible */
+}
+
+.calendar {
+  flex: 3;
 }
 
 .tab-selected-style {
@@ -494,24 +518,4 @@ body{
 .tab-style-sep {
   border-top: 1px solid rgb(168, 162, 162) !important;
   border-right: 1px dotted rgb(168, 162, 162) !important;
-}
-
-.visible {
-  display: block;
-  position: absolute;
-  overflow: auto;
-  z-index: 20;
-  border-color: 1px solid  white !important;
-  background: #22252b;
-  padding: 20px;
-}
-
-.not-visible{
-  display: none;
-  position: absolute;
-}
-
-input[type="radio"] {
-  left: -999em;
-  position: absolute;
 }
