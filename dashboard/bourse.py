@@ -32,12 +32,12 @@ def getAllName():
     query = '''select name, symbol from companies;'''
     df = pd.read_sql_query(query,engine)
     name_symbol_tuple = list(zip(df['name'], df['symbol']))
-    list_name_symbol = [ name + ' ● ' + symbol for name, symbol in name_symbol_tuple]
+    list_name_symbol = [ name + ' • ' + symbol for name, symbol in name_symbol_tuple]
     return list_name_symbol
 
 app.layout = html.Div(children=[
     html.Div(
-        className="three columns div-left-panel",
+        className="div-top-panel",
         children=[
         # Div for Left Panel App Info
         html.Div(
@@ -60,14 +60,12 @@ app.layout = html.Div(children=[
                 dcc.Markdown(
                     """
                     Projet Python Big Data for EPITA.
-
-                    [Source Code](https://github.com/xCosmicOtter/bigdata.git)
                     """
                 ),
             ]),
         ]),
     html.Div(
-        className="nine columns div-right-panel",
+        className="eight columns div-left-panel",
         children=[
         html.Div(
                 className='flex-container',
@@ -109,112 +107,106 @@ app.layout = html.Div(children=[
                     )
                 ]
             ),
-        dcc.Tabs(
+
+        html.Div(id='dd-output-graph'),
+        html.Div(className = "tabs-date",children = [
+            dcc.Tabs(
             colors={
                 "primary": "#119DFF",
             },
         children=[
-            dcc.Tab(label='1J',className='tab-style-left',selected_className='tab-selected-style',children=[
-                html.Div(id='dd-output-graph')
-            ]),
+            dcc.Tab(label='1J',className='tab-style-left',selected_className='tab-selected-style'),
+            dcc.Tab(label='5J',className='tab-style-sep',selected_className='tab-selected-style'),
+            dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style'),
+            dcc.Tab(label='3M',className='tab-style-sep', selected_className='tab-selected-style'),
+            dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style'),
+            dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style'),
+            dcc.Tab(label='5A', className='tab-style-right',selected_className='tab-selected-style'),
+        ])]),]),
+    html.Div(
+            className="three columns day-resume",
+            children=[
+                html.Div(
+                    className="resume-text",
+                    children=[dcc.Markdown(
+                                """
+                                Day Summary
+                                """)]),
+                html.Div(
+                    className="resume-box",
+                    children=[
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                Date
+                                """ ),
+                                html.Div(id = "last-date")
+                        ]),
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                Volume
+                                """ )
+                        ])]
+                ),
+                 html.Div(
+                    className="resume-box",
+                    children=[
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                Open
+                                """ )
+                        ]),
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                Close
+                                """ )
+                        ])]
+                ),
+                html.Div(
+                    className="resume-box",
+                    children=[
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                Low
+                                """ )
+                        ]),
+                        html.Div(
+                        className="box",
+                        children= [
+                             dcc.Markdown(
+                                """
+                                High
+                                """ )
+                        ])]
+                ),
+                
+            ])])
 
-            dcc.Tab(label='5J',className='tab-style-sep',selected_className='tab-selected-style', children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [1, 4, 1],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [1, 2, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='3M',className='tab-style', selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='6M', className='tab-style-sep',selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-            dcc.Tab(label='5A', className='tab-style-right',selected_className='tab-selected-style',children=[
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': [1, 2, 3], 'y': [2, 4, 3],
-                                'type': 'bar', 'name': 'SF'},
-                            {'x': [1, 2, 3], 'y': [5, 4, 3],
-                            'type': 'bar', 'name': 'Montréal'},
-                        ]
-                    }
-                )
-            ]),
-        ])]),
-        dcc.Textarea(
-        id='sql-query',
-        value='''
-            SELECT * FROM pg_catalog.pg_tables
-                WHERE schemaname != 'pg_catalog' AND
-                        schemaname != 'information_schema';
-        ''',
-        style={'width': '100%', 'height': 100},
-        ),
-        html.Button('Execute', id='execute-query', n_clicks=0),
-        html.Div(id='query-result'),
-])
+        # dcc.Textarea(
+        # id='sql-query',
+        # value='''
+        #    SELECT * FROM pg_catalog.pg_tables
+        #        WHERE schemaname != 'pg_catalog' AND
+        #                schemaname != 'information_schema';
+        # ''',
+        # style={'width': '100%', 'height': 100},
+        # ),
+        # html.Button('Execute', id='execute-query', n_clicks=0),
+        # html.Div(id='query-result'),
 
 @app.callback(
     ddep.Output("submenu", "className"),
@@ -246,12 +238,12 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    ddep.Output('dd-output-graph', 'children'),
+    [ddep.Output('dd-output-graph', 'children'),ddep.Output('last-date','children')],
     [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
 def display_graph_by_name(value,graphType):
     if (value != None):
-        value = value.split(" ● ")[1]
+        value = value.split(" • ")[1]
         query=f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
         df = pd.read_sql_query(query,engine)
         if (graphType == 'line'):
@@ -274,8 +266,8 @@ def display_graph_by_name(value,graphType):
             
             # Create figure
             fig = go.Figure(data=[trace], layout=layout)
-        return dcc.Graph(figure=fig)
-    return dcc.Graph()
+        return dcc.Graph(figure=fig),dcc.Markdown(f"{df['date'].iloc[-1].date()}")
+    return dcc.Graph(), dcc.Markdown('''''')
 
 @app.callback( ddep.Output('query-result', 'children'),
                ddep.Input('execute-query', 'n_clicks'),

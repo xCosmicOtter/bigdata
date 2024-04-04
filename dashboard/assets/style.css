@@ -440,12 +440,14 @@ body{
   margin: 0;
 }
 
-.div-left-panel{
+.div-top-panel{
   background-color: #22252b;
   color: #b2b2b2;
   margin: 0px;
-  height:100vh;
-  padding: 32px;
+  height:10vh;
+  width: 100%;
+  padding-left: 50%;
+  padding-top: 20px
   /*overflow-y: scroll;*/
 }
 
@@ -453,7 +455,7 @@ body{
   font-size: 12px ;
 }
 
-.div-right-panel{
+.div-left-panel{
   padding: 80px 64px 64px 32px;
 }
 
@@ -503,19 +505,74 @@ input[type="radio"] {
 
 .tab-style {
   border-top: 1px solid rgb(168, 162, 162) !important;
+  width: 20px !important;
+  font-family: "system-ui";
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-style-left {
   border-top: 1px solid rgb(168, 162, 162) !important;
   border-left: 1px solid rgb(168, 162, 162) !important;
+  width: 20px !important;
+  font-family: "system-ui";
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-style-right {
   border-top: 1px solid rgb(168, 162, 162) !important;
   border-right: 1px solid rgb(168, 162, 162) !important;
+  width: 20px !important;
+  font-family: "system-ui";
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-style-sep {
   border-top: 1px solid rgb(168, 162, 162) !important;
   border-right: 1px dotted rgb(168, 162, 162) !important;
+  width: 20px !important;
+  font-family: "system-ui";
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-resume{
+  padding: 130px 64px 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.resume-text{
+  border: 1px solid black;
+  text-align: center;
+  width: 100%;
+  background-color: white;
+  height: 50px;
+  flex : 1;
+  font-size: medium;
+  color: red;
+}
+
+.resume-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  background-color: white;
+  width: 100%;
+  height: 100px;
+}
+
+.box{
+  flex: 1;
+  justify-content: space-evenly;
+  border-width: 100px;
+  border: 1px solid black;
 }
