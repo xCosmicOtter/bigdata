@@ -568,8 +568,9 @@ input[type="radio"] {
 }
 
 .tab-selected-style {
-  border-bottom: 1px solid #119DFF !important;
-  color:#119DFF !important;
+  border-top: none !important;
+  border-bottom: 0.5px solid #F1C086 !important;
+  color:#F1C086 !important;
   background-color: transparent !important;
 }
 
@@ -604,7 +605,7 @@ input[type="radio"] {
   height: 50px;
   flex : 1;
   font-size: medium;
-  color: red;
+  color: #F1C086;
 }
 
 .resume-box {

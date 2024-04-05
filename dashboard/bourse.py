@@ -97,7 +97,7 @@ app.layout = html.Div(children=[
         html.Div(className = "toolbar",children = [
             dcc.Tabs(
             colors={
-                "primary": "#119DFF",
+                "primary": "#F1C086",
             },
         children=[
             dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style'),
