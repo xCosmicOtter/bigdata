@@ -253,8 +253,8 @@ def main() -> None:
                 logger.debug(f"# = Processing complete for {market_name} data in {year} in"
                             f" {subprocessing_time} seconds. = #")
 
-        yearprocessing_time = round(time.time() - starting_year_time, 3)
-        logger.debug(f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
+            yearprocessing_time = round(time.time() - starting_year_time, 3)
+            logger.debug(f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
 
     rounded_processing_time = round(time.time() - starting_time, 3)
     logger.debug(f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
