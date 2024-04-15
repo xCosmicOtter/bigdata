@@ -191,7 +191,9 @@ app.layout = html.Div(children=[
                              dcc.Markdown(
                                 """
                                 Volume
-                                """ )
+                                """ ),
+                            html.Div(
+                                id = "volume_last_day")
                         ])]
                 ),
                  html.Div(
@@ -204,7 +206,9 @@ app.layout = html.Div(children=[
                              dcc.Markdown(
                                 """
                                 Open
-                                """ )
+                                """ ),
+                            html.Div(
+                                id = "open_last_day")
                         ]),
                         html.Div(
                         className="box",
@@ -213,7 +217,9 @@ app.layout = html.Div(children=[
                              dcc.Markdown(
                                 """
                                 Close
-                                """ )
+                                """ ),
+                            html.Div(
+                                id = "close_last_day")
                         ])]
                 ),
                 html.Div(
@@ -226,7 +232,9 @@ app.layout = html.Div(children=[
                              dcc.Markdown(
                                 """
                                 Low
-                                """ )
+                                """ ),
+                            html.Div(
+                                id = "low_last_day")
                         ]),
                         html.Div(
                         className="box",
@@ -235,7 +243,10 @@ app.layout = html.Div(children=[
                              dcc.Markdown(
                                 """
                                 High
-                                """ )
+                                """ ),
+                            html.Div(
+                                id = "high_last_day")
+
                         ])]
                 ),
                 
@@ -299,7 +310,7 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    [ddep.Output('dd-output-graph', 'children'),ddep.Output('last-date','children'),ddep.Output('table-daystocks','children')],
+    [ddep.Output('dd-output-graph', 'children'),ddep.Output('table-daystocks','children'),ddep.Output('last-date','children'),ddep.Output('high_last_day','children'),ddep.Output('low_last_day','children'),ddep.Output('close_last_day','children'),ddep.Output('open_last_day','children'),ddep.Output('volume_last_day','children')],
     [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
 def display_graph_by_name(value,graphType):
@@ -331,8 +342,11 @@ def display_graph_by_name(value,graphType):
         data=df.to_dict('records'),
         columns=[{'id': c, 'name': c} for c in df.columns],
         )
-        return dcc.Graph(figure=fig),dcc.Markdown(f"{df['date'].iloc[-1].date()}"),table_daystocks
-    return dcc.Graph(), dcc.Markdown(''''''),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'})
+        return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['low'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['close'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['volume'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['open'].iloc[-1].date()}")
+    return dcc.Graph(),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'}), dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown('''''')
+
+
+
 
 @app.callback( ddep.Output('query-result', 'children'),
                ddep.Input('execute-query', 'n_clicks'),
