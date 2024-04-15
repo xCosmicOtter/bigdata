@@ -1,5 +1,5 @@
 import dash
-from dash import dcc
+from dash import dcc, dash_table
 from dash import html
 import dash.dependencies as ddep
 import pandas as pd
@@ -145,7 +145,20 @@ app.layout = html.Div(children=[
         ),
         
         ]),
-
+        html.Br(),
+        html.Div(
+            className='title',
+            children=[
+                dcc.Markdown(
+                    """
+                    Historical Data
+                    """
+                ),
+            ]
+        ),
+        html.Div(
+            className='table-daystocks',
+            id = "table-daystocks"),
         
     ]),
     html.Div(
@@ -286,7 +299,7 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    [ddep.Output('dd-output-graph', 'children'),ddep.Output('last-date','children')],
+    [ddep.Output('dd-output-graph', 'children'),ddep.Output('last-date','children'),ddep.Output('table-daystocks','children')],
     [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
 def display_graph_by_name(value,graphType):
@@ -314,8 +327,12 @@ def display_graph_by_name(value,graphType):
             
             # Create figure
             fig = go.Figure(data=[trace], layout=layout)
-        return dcc.Graph(figure=fig),dcc.Markdown(f"{df['date'].iloc[-1].date()}")
-    return dcc.Graph(), dcc.Markdown('''''')
+        table_daystocks = dash_table.DataTable(
+        data=df.to_dict('records'),
+        columns=[{'id': c, 'name': c} for c in df.columns],
+        )
+        return dcc.Graph(figure=fig),dcc.Markdown(f"{df['date'].iloc[-1].date()}"),table_daystocks
+    return dcc.Graph(), dcc.Markdown(''''''),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'})
 
 @app.callback( ddep.Output('query-result', 'children'),
                ddep.Input('execute-query', 'n_clicks'),
