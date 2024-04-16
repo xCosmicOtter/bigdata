@@ -97,6 +97,8 @@ class TimescaleStockMarketModel:
                   close FLOAT4,
                   high FLOAT4,
                   low FLOAT4,
+                  average FLOAT4,
+                  standard_deviation FLOAT4,
                   volume INT
                 );''')
             cursor.execute('''SELECT create_hypertable('daystocks', by_range('date'));''')

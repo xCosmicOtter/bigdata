@@ -131,7 +131,7 @@ def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.T
     }).reset_index()
 
     # Rename columns for better clarity
-    daystocks_df.columns = ['symbol', 'date', 'open', 'close', 'low', 'high', 'average', 'standard deviation', 'volume']
+    daystocks_df.columns = ['symbol', 'date', 'open', 'close', 'low', 'high', 'average', 'standard_deviation', 'volume']
 
     # Merge daystocks_df with compagnies_df to get the cid
     daystocks_df = daystocks_df.merge(compagnies_df, left_on='symbol', right_on='symbol', how='left')
