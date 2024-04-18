@@ -505,6 +505,10 @@ input[type="radio"] {
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
 }
 
+.Select-input > input{
+  color : white !important;
+}
+
 .material-icons {
   padding-left: 10px;
   padding-bottom: 5px;

@@ -39,7 +39,7 @@ app.layout = html.Div(children=[
     #Interval for live clock
     dcc.Interval(
             id='interval-component',
-            interval=1000,  # Update every 1000 milliseconds (1 second)
+            interval=5000,  # Update every 5000 milliseconds (5 second)
             n_intervals=0
         ),
     html.Div(
@@ -99,14 +99,15 @@ app.layout = html.Div(children=[
             colors={
                 "primary": "#F1C086",
             },
+            value='5J',
         children=[
-            dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style'),
-            dcc.Tab(label='5J',className='tab-style',selected_className='tab-selected-style'),
-            dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style'),
-            dcc.Tab(label='3M',className='tab-style', selected_className='tab-selected-style'),
-            dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style'),
-            dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style'),
-            dcc.Tab(label='5A', className='tab-style-sep',selected_className='tab-selected-style'),
+            dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style',value='1J'),
+            dcc.Tab(label='5J',className='tab-style',selected_className='tab-selected-style',value='5J'),
+            dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style',value='1M'),
+            dcc.Tab(label='3M',className='tab-style', selected_className='tab-selected-style',value='3M'),
+            dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style',value='1A'),
+            dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style',value='2A'),
+            dcc.Tab(label='5A', className='tab-style-sep',selected_className='tab-selected-style',value='5A'),
         ]),
         html.Div(
             className='calendar',
@@ -345,8 +346,6 @@ def display_graph_by_name(value,graphType):
         )
         return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1]}"),dcc.Markdown(f"{df['low'].iloc[-1]}"),dcc.Markdown(f"{df['close'].iloc[-1]}"),dcc.Markdown(f"{df['open'].iloc[-1]}"),dcc.Markdown('''''')
     return dcc.Graph(),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'}), dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown('''''')
-
-
 
 
 @app.callback( ddep.Output('query-result', 'children'),
