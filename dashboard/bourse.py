@@ -343,7 +343,7 @@ def display_graph_by_name(value,graphType):
         columns=[{'id': c, 'name': c} for c in df.columns],
         page_size=15
         )
-        return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['low'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['close'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['volume'].iloc[-1].date()}"),table_daystocks,dcc.Markdown(f"{df['open'].iloc[-1].date()}")
+        return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1]}"),table_daystocks,dcc.Markdown(f"{df['low'].iloc[-1]}"),table_daystocks,dcc.Markdown(f"{df['close'].iloc[-1]}"),table_daystocks,dcc.Markdown(f"{df['volume'].iloc[-1]}"),table_daystocks,dcc.Markdown(f"{df['open'].iloc[-1]}")
     return dcc.Graph(),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'}), dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown('''''')
 
 
