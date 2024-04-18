@@ -285,5 +285,5 @@ def main() -> None:
     logger.debug(f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
 
 if __name__ == '__main__':
-    main()
+    #main()
     print('Done')

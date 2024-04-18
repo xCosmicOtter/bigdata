@@ -4,7 +4,7 @@ from dash import html
 import dash.dependencies as ddep
 import pandas as pd
 import sqlalchemy
-
+from plotly.subplots import make_subplots
 from datetime import datetime,timezone
 import plotly.express as px
 import plotly.graph_objs as go
@@ -39,7 +39,7 @@ app.layout = html.Div(children=[
     #Interval for live clock
     dcc.Interval(
             id='interval-component',
-            interval=1000,  # Update every 1000 milliseconds (1 second)
+            interval=10000,  # Update every 1000 milliseconds (1 second)
             n_intervals=0
         ),
     html.Div(
@@ -316,17 +316,71 @@ def change_image(selected_value):
 def display_graph_by_name(value,graphType):
     if (value != None):
         value = value.split(" • ")[1]
-        query=f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
+        query=f"SELECT date, open, high, low, close, volume FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
         df = pd.read_sql_query(query,engine)
         if (graphType == 'line'):
-            fig = px.line(df, x='date', y=['high'], title='Stock Prices')
+            # Création des subplots avec titres et espacement vertical ajusté
+            fig = make_subplots(
+                rows=2, cols=1, shared_xaxes=True,
+                subplot_titles=('Évolution des prix des actions', None),
+                vertical_spacing=0.01,
+                row_heights=[0.8, 0.2]
+            )
+
+            # Ajout des données High avec une ligne
+            fig.add_trace(
+                go.Scatter(x=df['date'], y=df['high'], mode='lines', name='High', line=dict(color='#F1C086')),
+                row=1, col=1
+            )
+
+            # Ajout des données Volume avec un graphique à barres
+            fig.add_trace(
+                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                row=2, col=1
+            )
+
+            # Ajout des titres et étiquettes des axes
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Prix des actions", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Volume", row=2, col=1)
+
+            # Ajout d'un titre général au graphique
+            fig.update_layout(
+                title_text="Analyse des prix des actions et du volume",
+                template="plotly_dark",
+                paper_bgcolor='#131312',  # Couleur de fond du graphique
+                plot_bgcolor='#131312',
+                font=dict(color='rgba(255, 255, 255, 0.7)')
+            )
+
+            # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
+            fig.update_xaxes(
+                ticks="outside",
+                ticklabelmode="period",
+                tickcolor="black",
+                ticklen=10,
+                row=2, col=1
+            )
+
+            # Ajout d'une légende
+            fig.update_layout(legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ))
+
+            fig.update_layout(hovermode="x unified")
+
+
         if (graphType == 'candlestick'):
             trace = go.Candlestick(
-            x=df['date'],
-            open=df['open'],
-            high=df['high'],
-            low=df['low'],
-            close=df['close']
+                x=df['date'],
+                open=df['open'],
+                high=df['high'],
+                low=df['low'],
+                close=df['close']
             )
 
             # Create layout
@@ -338,10 +392,11 @@ def display_graph_by_name(value,graphType):
 
             # Create figure
             fig = go.Figure(data=[trace], layout=layout)
+
         table_daystocks = dash_table.DataTable(
-        data=df.to_dict('records'),
-        columns=[{'id': c, 'name': c} for c in df.columns],
-        page_size=15
+            data=df.to_dict('records'),
+            columns=[{'id': c, 'name': c} for c in df.columns],
+            page_size=15
         )
         return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1]}"),dcc.Markdown(f"{df['low'].iloc[-1]}"),dcc.Markdown(f"{df['close'].iloc[-1]}"),dcc.Markdown(f"{df['open'].iloc[-1]}"),dcc.Markdown('''''')
     return dcc.Graph(),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'}), dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown('''''')
