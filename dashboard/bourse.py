@@ -89,6 +89,7 @@ app.layout = html.Div(children=[
                                         'box-shadow': 'none',
                                         },
                                     options=getAllName(),
+                                    multi=True,
                                     )
                     ]
                 ),
