@@ -458,7 +458,10 @@ body{
 .project-description p{
   font-size: 12px ;
 }
-
+.title p{
+  font-size: 16px ;
+  text-align: center;
+}
 .div-left-panel{
   padding: 80px 64px 64px 32px;
 }
