@@ -469,7 +469,11 @@ body{
   overflow: auto;
   z-index: 20;
   border-color: 1px solid  white !important;
+<<<<<<< HEAD
+  background: #22252b;
+=======
   background: #1A1B1C;
+>>>>>>> aep/dashboard
   padding: 20px;
 }
 
@@ -483,6 +487,29 @@ input[type="radio"] {
   position: absolute;
 }
 
+<<<<<<< HEAD
+.flex-container {
+  display: flex;
+  justify-content: space-between; /* Pour espacer les éléments horizontalement */
+}
+
+.search-bar {
+  flex: 3;/* Pour que la première partie occupe 3 unités de l'espace disponible */
+  padding-right: 20px;
+}
+
+.chart-options {
+  flex: 1; /* Pour que la deuxième partie occupe 1 unité de l'espace disponible */
+}
+
+.calendar {
+  flex: 3;
+}
+
+.tab-selected-style {
+  border-bottom: 3px solid #119DFF !important;
+  color:#119DFF !important;
+=======
 .search {
   --padding: 15px 10px 10px 10px;
 
@@ -575,10 +602,29 @@ input[type="radio"] {
   border-top: none !important;
   border-bottom: 0.5px solid #F1C086 !important;
   color:#F1C086 !important;
+>>>>>>> aep/dashboard
   background-color: transparent !important;
 }
 
 .tab-style {
+<<<<<<< HEAD
+  border-top: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-left {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-left: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-right {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-right: 1px solid rgb(168, 162, 162) !important;
+}
+
+.tab-style-sep {
+  border-top: 1px solid rgb(168, 162, 162) !important;
+  border-right: 1px dotted rgb(168, 162, 162) !important;
+=======
   width: 20px !important;
   display: flex !important;
   align-items: center;
@@ -626,4 +672,5 @@ input[type="radio"] {
   justify-content: space-evenly;
   border-width: 100px;
   border: 1px solid black;
+>>>>>>> aep/dashboard
 }
