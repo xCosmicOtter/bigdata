@@ -562,6 +562,62 @@ input[type="radio"] {
   background-color: transparent !important;
   color: white;
 }
+
+.DayPicker,
+.CalendarMonthGrid,
+.CalendarMonth {
+  background: #131312 !important;
+  border-radius: 0;
+}
+
+.CalendarDay,
+.CalendarMonth_caption {
+  background: #131312 !important;
+  color: white;
+  border-color: white !important;
+}
+
+.DayPicker_weekHeader
+{
+  color: white;
+}
+
+.DayPickerNavigation_button__default {
+  background: #1A1B1C !important;
+}
+
+.CalendarDay:hover {
+  text-decoration: underline;
+}
+
+.CalendarDay__selected {
+  background-color: #F1C086 !important;
+  color: red
+}
+
+.CalendarDay__selected_span,
+.CalendarDay__selected_span:hover,
+.CalendarDay__selected_span:active,
+.CalendarDay__selected_span:disabled {
+  background: #f7d6b2 !important;
+  border: 1px double #999999 !important;
+  color: gray !important;
+}
+
+.CalendarDay__highlighted_calendar:active,
+.CalendarDay__highlighted_calendar:hover {
+  background: #777777 !important;
+  color: gray !important;
+}
+
+.CalendarDay__hovered_span,
+.CalendarDay__hovered_span:hover,
+.CalendarDay__hovered_span:active{
+  background: #f7d6b2 !important;
+  border: 1px double #666666 !important;
+  color: gray !important;
+}
+
 .clock {
   margin-left: auto;
   margin-right: 20px;
