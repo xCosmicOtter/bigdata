@@ -313,6 +313,7 @@ def change_image(selected_value):
 
 @app.callback(
     [ddep.Output('dd-output-graph', 'children'),ddep.Output('table-daystocks','children'),ddep.Output('last-date','children'),ddep.Output('high_last_day','children'),ddep.Output('low_last_day','children'),ddep.Output('close_last_day','children'),ddep.Output('open_last_day','children'),ddep.Output('volume_last_day','children')],
+
     [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
 def display_graph_by_name(value,graphType):
