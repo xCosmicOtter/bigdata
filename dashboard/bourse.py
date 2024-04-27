@@ -39,7 +39,7 @@ app.layout = html.Div(children=[
     #Interval for live clock
     dcc.Interval(
             id='interval-component',
-            interval=5000,  # Update every 5000 milliseconds (5 second)
+            interval=1000,  # Update every 1000 milliseconds (1 second)
             n_intervals=0
         ),
     html.Div(
@@ -70,29 +70,36 @@ app.layout = html.Div(children=[
                 ),
             ]),
         ]),
-    html.Div(
+        html.Div(
         className="eight columns div-left-panel",
         children=[
+  
         html.Div(
-                    className='search',
-                    children=[
-                        html.I(className='material-icons', children='search'),
-                        dcc.Dropdown(placeholder="Select a company", id='companyName',
-                                    style={
-                                        'flex': '1',  
-                                        'border-radius': '28px', 
-                                        'background': '#f6f6f6', 
-                                        'transition': 'box-shadow 0.25s',
-                                        'border': 'none',     # Apply border style
-                                        'outline': 'none',    # Apply outline style
-                                        'background-color': 'transparent',  # Apply background color style
-                                        'box-shadow': 'none',
-                                        },
-                                    options=getAllName(),
-                                    multi=True,
-                                    )
-                    ]
-                ),
+            id='search',
+            className='search',
+            children=[
+                html.I(className='material-icons', children='search'),
+                dcc.Dropdown(placeholder="Select a company", id='companyName',
+                            style={
+                                'flex': '1',  
+                                'border-radius': '28px', 
+                                'background': '#f6f6f6', 
+                                'transition': 'box-shadow 0.25s',
+                                'border': 'none',     # Apply border style
+                                'outline': 'none',    # Apply outline style
+                                'background-color': 'transparent',  # Apply background color style
+                                'box-shadow': 'none',
+                                },
+                            options=getAllName(),
+                            multi=True,
+                            ),
+            ]
+        ),
+        html.Br(),
+        dcc.Checklist(
+            options=['CompA', 'CompB', 'PEAPME', 'AMSTERDAM'],
+            inline=True
+        ),
         html.Br(),
         html.Div(id='dd-output-graph'),
         html.Div(className = "toolbar",children = [
@@ -114,9 +121,10 @@ app.layout = html.Div(children=[
             className='calendar',
             children=[
                 dcc.DatePickerRange(
-                    month_format='D/M/Y',
+                    month_format='DD/MM/YYYY',
                     end_date_placeholder_text='JJ/MM/AAAA',
-                    start_date_placeholder_text='JJ/MM/AAAA'
+                    start_date_placeholder_text='JJ/MM/AAAA',
+                    display_format='DD/MM/YYYY'
                 )
             ]
         ),
@@ -150,6 +158,7 @@ app.layout = html.Div(children=[
         html.Br(),
         html.Div(
             className='title',
+            id = "title-table-daystocks",
             children=[
                 dcc.Markdown(
                     """
@@ -158,10 +167,13 @@ app.layout = html.Div(children=[
                 ),
             ]
         ),
-        html.Div(
+        dcc.Tabs(
             className='table-daystocks',
-            id = "table-daystocks"),
-        
+            id = "table-daystocks",
+            colors={
+                "primary": "#F1C086",
+            },
+        children=[])
     ]),
     html.Div(
             className="three columns day-resume",
@@ -280,8 +292,6 @@ def update_clock(n_intervals):
 
     return f"{local_time} (UTC+{int(utc_offset_hours)})"
 
-
-
 @app.callback(
     ddep.Output("submenu", "className"),
     [ddep.Input("chart-img", "n_clicks"),
@@ -312,41 +322,75 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    [ddep.Output('dd-output-graph', 'children'),ddep.Output('table-daystocks','children'),ddep.Output('last-date','children'),ddep.Output('high_last_day','children'),ddep.Output('low_last_day','children'),ddep.Output('close_last_day','children'),ddep.Output('open_last_day','children'),ddep.Output('volume_last_day','children')],
+    ddep.Output('search', 'style'),
+    [ddep.Input('companyName', 'value')]
+)
+def update_search_bar_height(selected_items):
+    if (selected_items != None):
+        row = len(selected_items) // 3
+        height = 15 + row  * 35  # Adjust as needed
+        return {'height': f'{height}px'}
+
+@app.callback(
+    [ddep.Output('dd-output-graph', 'children'),ddep.Output('table-daystocks','children'),ddep.Output('table-daystocks', 'value'),ddep.Output('title-table-daystocks','style'),ddep.Output('last-date','children'),ddep.Output('high_last_day','children'),ddep.Output('low_last_day','children'),ddep.Output('close_last_day','children'),ddep.Output('open_last_day','children'),ddep.Output('volume_last_day','children')],
     [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
 )
-def display_graph_by_name(value,graphType):
-    if (value != None):
-        value = value.split(" • ")[1]
-        query=f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
-        df = pd.read_sql_query(query,engine)
-        if (graphType == 'line'):
-            fig = px.line(df, x='date', y=['high'], title='Stock Prices')
-        if (graphType == 'candlestick'):
-            trace = go.Candlestick(
-            x=df['date'],
-            open=df['open'],
-            high=df['high'],
-            low=df['low'],
-            close=df['close']
+def display_graph_and_tabs(values, graphType):
+    if values:
+        traces = []
+        combined_df = pd.DataFrame()
+        tabs = []
+
+        for value in values:
+            value = value.split(" • ")[1]
+            query = f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
+            df = pd.read_sql_query(query, engine)
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+            traces.append(go.Scatter(x=df['date'], y=df['high'], mode='lines', name=value))
+
+            # Create tab content for each value
+            tab_content = dash_table.DataTable(
+                id={'type': 'dynamic-table', 'index': value},
+                data=df.to_dict('records'),
+                columns=[{'id': c, 'name': c} for c in df.columns],
+                page_size=15
             )
-            
-            # Create layout
-            layout = go.Layout(
-                title='Stock Prices',
-                xaxis=dict(title='Date'),
-                yaxis=dict(title='Price')
-            )
-            
-            # Create figure
-            fig = go.Figure(data=[trace], layout=layout)
-        table_daystocks = dash_table.DataTable(
-        data=df.to_dict('records'),
-        columns=[{'id': c, 'name': c} for c in df.columns],
-        page_size=15
+            tabs.append(dcc.Tab(label=value, value=value, children=[tab_content]))
+
+        layout = go.Layout(title='Stock Prices', xaxis=dict(title='Date'), yaxis=dict(title='Price'))
+        fig = go.Figure(data=traces, layout=layout)
+
+        last_date = combined_df['date'].iloc[-1].date() if not combined_df.empty else ''
+        high_last_day = combined_df['high'].iloc[-1] if not combined_df.empty else ''
+        low_last_day = combined_df['low'].iloc[-1] if not combined_df.empty else ''
+        close_last_day = combined_df['close'].iloc[-1] if not combined_df.empty else ''
+        open_last_day = combined_df['open'].iloc[-1] if not combined_df.empty else ''
+
+        return (
+            dcc.Graph(figure=fig),
+            tabs,
+            values[-1].split(" • ")[1],
+            {'display': 'block'} if len(tabs) >= 1 else {'display': 'none'},
+            dcc.Markdown(f"{last_date}"),
+            dcc.Markdown(f"{high_last_day}"),
+            dcc.Markdown(f"{low_last_day}"),
+            dcc.Markdown(f"{close_last_day}"),
+            dcc.Markdown(f"{open_last_day}"),
+            dcc.Markdown('')
         )
-        return dcc.Graph(figure=fig),table_daystocks,dcc.Markdown(f"{df['date'].iloc[-1].date()}"),dcc.Markdown(f"{df['high'].iloc[-1]}"),dcc.Markdown(f"{df['low'].iloc[-1]}"),dcc.Markdown(f"{df['close'].iloc[-1]}"),dcc.Markdown(f"{df['open'].iloc[-1]}"),dcc.Markdown('''''')
-    return dcc.Graph(),dcc.Markdown('''No Data Found''', style={'display':'inline-block', 'textAlign':'left'}), dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown(''''''),dcc.Markdown('''''')
+    
+    return (
+        dcc.Graph(),
+        [],
+        None,
+        {'display': 'none'},
+        dcc.Markdown(''''''),
+        dcc.Markdown(''''''),
+        dcc.Markdown(''''''),
+        dcc.Markdown(''''''),
+        dcc.Markdown(''''''),
+        dcc.Markdown('''''')
+    )
 
 
 @app.callback( ddep.Output('query-result', 'children'),
