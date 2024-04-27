@@ -323,8 +323,7 @@ table {
 th:not(.CalendarDay),
 td:not(.CalendarDay) {
   padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #E1E1E1; }
+  text-align: left; }
 th:first-child:not(.CalendarDay),
 td:first-child:not(.CalendarDay) {
   padding-left: 0; }
@@ -373,8 +372,7 @@ ol {
 hr {
   margin-top: 3rem;
   margin-bottom: 3.5rem;
-  border-width: 0;
-  border-top: 1px solid #E1E1E1; }
+  border-width: 0;}
 
 
 /* Clearing
@@ -424,8 +422,7 @@ text color : #F1C086
 */
 body{
   /*background-color: #000000;*/
-  background: rgb(73,73,65);
-  background: linear-gradient(180deg, rgba(73,73,65,1) 0%, rgba(15,15,14,1) 20%, rgba(31,30,30,1) 100%);
+  background:  #1A1B1C;
   color: #b2b2b2;
   height: 100vh;
   margin: 0;
@@ -445,14 +442,14 @@ body{
 }
 
 .div-top-panel {
-  /*background-color: #1A1B1C;*/
+  background-color: #131312;
   color: #b2b2b2;
   height: 20%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 20px;
+  border-bottom: 0.5px solid white !important;
 }
 
 .project-description p{
@@ -530,6 +527,10 @@ input[type="radio"] {
 
 .search:hover{
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
+}
+
+.Select-input > input{
+  color : white !important;
 }
 
 .material-icons {
