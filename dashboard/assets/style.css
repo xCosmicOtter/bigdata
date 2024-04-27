@@ -417,8 +417,15 @@ there.
 /* Custom App CSS
 -------------------------------------------------- */
 
+/* 
+Main color : #1B1A1A
+Secondary color : #131312
+text color : #F1C086
+*/
 body{
-  background-color: #1a1c23;
+  /*background-color: #000000;*/
+  background: rgb(73,73,65);
+  background: linear-gradient(180deg, rgba(73,73,65,1) 0%, rgba(15,15,14,1) 20%, rgba(31,30,30,1) 100%);
   color: #b2b2b2;
   height: 100vh;
   margin: 0;
@@ -434,26 +441,28 @@ body{
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  color: #F1C086;
 }
 
-.logo-text p {
-  margin: 0;
-}
-
-.div-left-panel{
-  background-color: #22252b;
+.div-top-panel {
+  /*background-color: #1A1B1C;*/
   color: #b2b2b2;
-  margin: 0px;
-  height:100vh;
-  padding: 32px;
-  /*overflow-y: scroll;*/
+  height: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 20px;
 }
 
 .project-description p{
   font-size: 12px ;
 }
-
-.div-right-panel{
+.title p{
+  font-size: 16px ;
+  text-align: center;
+}
+.div-left-panel{
   padding: 80px 64px 64px 32px;
 }
 
@@ -463,7 +472,7 @@ body{
   overflow: auto;
   z-index: 20;
   border-color: 1px solid  white !important;
-  background: #22252b;
+  background: #1A1B1C;
   padding: 20px;
 }
 
@@ -477,45 +486,147 @@ input[type="radio"] {
   position: absolute;
 }
 
-.flex-container {
+.search {
+  --padding: 15px 10px 10px 10px;
+
+  width: max-content;
   display: flex;
-  justify-content: space-between; /* Pour espacer les éléments horizontalement */
+  align-items: center;
+  padding: var(--padding);
+  border-radius: 28px;
+  background: #131312 ;
+  transition: box-shadow 0.25s;
+  width: 800px;
+  height: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.search-bar {
-  flex: 3;/* Pour que la première partie occupe 3 unités de l'espace disponible */
-  padding-right: 20px;
+.search:hover{
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
+}
+
+.Select-input > input{
+  color : white !important;
+}
+
+.material-icons {
+  padding-left: 10px;
+  padding-bottom: 5px;
+  color: rgba(255, 255, 255, 0.5); /* Change icon color to white */
+  font-size: 22px;
+}
+
+.Select-placeholder
+{
+  color: rgba(255, 255, 255, 0.5); /* Change text color to white */
+}
+
+.Select-value-label{
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.Select-clear-zone:hover {
+  color: white !important;
 }
 
 .chart-options {
-  flex: 1; /* Pour que la deuxième partie occupe 1 unité de l'espace disponible */
+  padding-top: 10px;
+  padding-left: 20px
 }
 
 .calendar {
-  flex: 3;
+  padding-top: 20px;
+  padding-left: 10px;
+}
+
+.DateRangePickerInput{
+  background: transparent !important;
+  border: none !important;
+}
+
+.DayPickerKeyboardShortcuts_buttonReset {
+  display: none;
+}
+
+.DateInput{
+  background: transparent !important;
+}
+
+.DateInput_input {
+  background: #131312 !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.DateRangePickerInput_arrow_svg {
+  background-color: transparent !important;
+  color: white;
+}
+.clock {
+  margin-left: auto;
+  margin-right: 20px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .tab-selected-style {
-  border-bottom: 3px solid #119DFF !important;
-  color:#119DFF !important;
+  border-top: none !important;
+  border-bottom: 0.5px solid #F1C086 !important;
+  color:#F1C086 !important;
   background-color: transparent !important;
 }
 
 .tab-style {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-}
-
-.tab-style-left {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-  border-left: 1px solid rgb(168, 162, 162) !important;
-}
-
-.tab-style-right {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-  border-right: 1px solid rgb(168, 162, 162) !important;
+  width: 20px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-style-sep {
-  border-top: 1px solid rgb(168, 162, 162) !important;
   border-right: 1px dotted rgb(168, 162, 162) !important;
+  width: 20px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-resume{
+  padding: 130px 64px 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.resume-text{
+  border: 1px solid black;
+  text-align: center;
+  width: 100%;
+  background-color: white;
+  height: 50px;
+  flex : 1;
+  font-size: medium;
+  color: #F1C086;
+}
+
+.resume-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  background-color: white;
+  width: 100%;
+  height: 100px;
+}
+
+.box{
+  flex: 1;
+  justify-content: space-evenly;
+  border-width: 100px;
+  border: 1px solid black;
 }
