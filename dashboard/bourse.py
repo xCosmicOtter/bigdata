@@ -8,6 +8,7 @@ from plotly.subplots import make_subplots
 from datetime import datetime,timezone
 import plotly.express as px
 import plotly.graph_objs as go
+from datetime import datetime, timedelta
 
 external_stylesheets = [
     #'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -109,6 +110,7 @@ app.layout = html.Div(children=[
                                 html.Div(className= "toolbar-left",
                                         children = [
                                                 dcc.Tabs(
+                                                    id = "tabs-day",
                                                     colors={
                                                         "primary": "#F1C086",
                                                     },
@@ -162,7 +164,7 @@ app.layout = html.Div(children=[
                                             id='clock',
                                             className='clock'
                                         ),
-                                        html.Button('Log', id='log-button',className='toggle-button')
+                                        html.Button('Log', id='log-button',className='toggle-button toggle-off')
 
                                 ]),
 
@@ -296,17 +298,56 @@ def update_search_bar_height(selected_items):
 
     [ddep.Input('companyName', 'value'),
      ddep.Input('log-button', 'n_clicks'),
-     ddep.Input('graph-type-dropdown', 'value')],
+     ddep.Input('graph-type-dropdown', 'value'),
+     ddep.Input('tabs-day','value')],
 
     [ddep.State('log-button', 'className')]
 )
-def display_graph_and_tabs(values, n_clicks, graphType , class_name):
-    toogleclass = class_name
+def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name):
     if n_clicks:
         if 'toggle-on' in class_name:
-            toogleclass = 'toggle-button toggle-off'
+            class_name = 'toggle-button toggle-off'
         else:
-            toogleclass = 'toggle-button toggle-on'
+            class_name = 'toggle-button toggle-on'
+
+    def generate_query(symbol, time_period):
+        last_day_2023 = datetime(2023, 12, 31)
+
+        if time_period == '1J':
+            start_date = last_day_2023 - timedelta(days=1)
+        elif time_period == '5J':
+            start_date = last_day_2023 - timedelta(weeks=1)
+        elif time_period == '1M':
+            start_date = last_day_2023 - timedelta(days=30)
+        elif time_period == '3M':
+            start_date = last_day_2023 - timedelta(days=90)
+        elif time_period == '1A':
+            start_date = last_day_2023 - timedelta(days=365)
+        elif time_period == '2A':
+            start_date = last_day_2023 - timedelta(days=365*2)
+        elif time_period == '5A':
+            start_date = last_day_2023 - timedelta(days=365*5)
+        else:
+            raise ValueError("Invalid time period")
+
+        query = """"""
+        if time_period in ('last_day', 'last_week'):
+            query = f"""
+                SELECT date, open, high, low, close, volume
+                FROM stocks
+                WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
+                AND date >= '{start_date.strftime('%Y-%m-%d')}'
+                ORDER BY date
+            """
+        else:
+            query = f"""
+                SELECT date, open, high, low, close, volume
+                FROM daystocks
+                WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
+                AND date >= '{start_date.strftime('%Y-%m-%d')}'
+                ORDER BY date
+            """
+        return query
 
     if values:
         combined_df = pd.DataFrame()
@@ -317,7 +358,7 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
 
         for value in values:
             symbol = value.split(" • ")[1]
-            query = f"SELECT date, open, high, low, close, volume FROM daystocks where cid = (SELECT id from companies where symbol = '{symbol}') order by date"
+            query = generate_query(symbol, time_period)
             company_df = pd.read_sql_query(query, engine)
 
             selected_companies.append(symbol)
@@ -335,7 +376,6 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
                 page_size=15
             )
             tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
-
 
             last_date = df['date'].iloc[-1].date() if not df.empty else ''
             high_last_day = df['high'].iloc[-1] if not df.empty else ''
@@ -445,6 +485,129 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
             ))
 
             fig.update_layout(hovermode="x unified")
+        elif (graphType == 'candlestick'):
+            # Création des subplots avec titres et espacement vertical ajusté
+            fig = make_subplots(
+                rows=2, cols=1, shared_xaxes=True,
+                subplot_titles=(None, None),
+                vertical_spacing=0.01,
+                row_heights=[0.8, 0.2]
+            )
+
+            for idx, symbol in enumerate(selected_companies):
+                # Ajout des données Candlesticks
+                df = combined_df.loc[symbol]
+                fig.add_trace(
+                    go.Candlestick(x=df['date'],
+                                open=df['open'],
+                                high=df['high'],
+                                low=df['low'],
+                                close=df['close'],
+                                name=symbol),
+                    row=1, col=1
+                )
+
+            # Ajout des données Volume avec un graphique à barres
+            fig.add_trace(
+                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                row=2, col=1
+            )
+
+            # Ajout des titres et étiquettes des axes
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Volume", row=2, col=1)
+
+            if 'toggle-on' not in class_name:
+                fig.update_yaxes(type="log", row=1, col=1)
+
+            # Ajout d'un titre général au graphique
+            fig.update_layout(
+                title_text="Analyse des prix des actions et du volume",
+                template="plotly_dark",
+                paper_bgcolor='#131312',  # Couleur de fond du graphique
+                plot_bgcolor='#131312',
+                font=dict(color='rgba(255, 255, 255, 0.7)')
+            )
+
+            # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
+            fig.update_xaxes(
+                ticks="outside",
+                ticklabelmode="period",
+                tickcolor="black",
+                ticklen=10,
+                row=2, col=1
+            )
+
+            # Ajout d'une légende
+            fig.update_layout(legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ))
+
+            fig.update_layout(hovermode="x unified")
+        elif (graphType == 'area'):
+            # Création des subplots avec titres et espacement vertical ajusté
+            fig = make_subplots(
+                rows=2, cols=1, shared_xaxes=True,
+                subplot_titles=(None, None),
+                vertical_spacing=0.01,
+                row_heights=[0.8, 0.2]
+            )
+
+            for idx, symbol in enumerate(selected_companies):
+                # Ajout des données Area
+                df = combined_df.loc[symbol]
+                fig.add_trace(
+                    go.Scatter(x=df['date'], y=df['close'], mode='lines', fill='tozeroy', name=symbol),
+                    row=1, col=1
+                )
+
+            # Ajout des données Volume avec un graphique à barres
+            fig.add_trace(
+                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                row=2, col=1
+            )
+
+            # Ajout des titres et étiquettes des axes
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Volume", row=2, col=1)
+
+            if 'toggle-on' not in class_name:
+                fig.update_yaxes(type="log", row=1, col=1)
+
+            # Ajout d'un titre général au graphique
+            fig.update_layout(
+                title_text="Analyse des prix des actions et du volume",
+                template="plotly_dark",
+                paper_bgcolor='#131312',  # Couleur de fond du graphique
+                plot_bgcolor='#131312',
+                font=dict(color='rgba(255, 255, 255, 0.7)')
+            )
+
+            # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
+            fig.update_xaxes(
+                ticks="outside",
+                ticklabelmode="period",
+                tickcolor="black",
+                ticklen=10,
+                row=2, col=1
+            )
+
+            # Ajout d'une légende
+            fig.update_layout(legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ))
+
+            fig.update_layout(hovermode="x unified")
 
         return (
             dcc.Graph(figure=fig),
@@ -454,7 +617,7 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
             {'display': 'block'},
             tabs_summary,
             values[-1].split(" • ")[1],
-            toogleclass,
+            class_name,
         )
 
     return (
@@ -465,7 +628,7 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
         {'display': 'none'},
         [],
         None,
-        toogleclass,
+        class_name,
     )
 
 
