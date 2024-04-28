@@ -431,15 +431,15 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 FROM stocks
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
-                ORDER BY date
+                ORDER BY date desc
             """
         else:
             query = f"""
-                SELECT date, open, high, low, close, volume
+                SELECT date, open, high, low, close, volume, average, standard_deviation
                 FROM daystocks
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
-                ORDER BY date
+                ORDER BY date desc
             """
         return query
 
@@ -471,7 +471,17 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 },
                 data=df.to_dict('records'),
                 columns=[{'id': c, 'name': c} for c in df.columns],
-                page_size=15
+                page_size=15,
+                style_header={
+                    'backgroundColor': "#131312",
+                    'textAlign': 'center',
+                    'color': 'rgba(255, 255, 255, 0.7)'
+                },
+                style_data={
+                    'backgroundColor': "#1A1B1B",
+                    'textAlign': 'center',
+                    'color': 'rgba(255, 255, 255, 0.7)'
+                }
             )
             tabs.append(dcc.Tab(label=symbol, value=symbol,
                         children=[tab_content]))
@@ -482,6 +492,8 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
             close_last_day = df['close'].iloc[-1] if not df.empty else ''
             open_last_day = df['open'].iloc[-1] if not df.empty else ''
             volume_last_day = df['volume'].iloc[-1] if not df.empty else ''
+            mean_last_day = df['average'].iloc[-1] if not df.empty else ''
+            std_last_day = df['standard_deviation'].iloc[-1] if not df.empty else ''
 
             tab_summary_content = html.Div([
                 html.Div(className="resume-box", children=[
@@ -530,6 +542,22 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                         dcc.Markdown("High"),
                         html.Div(id="high_last_day",
                                  children=dcc.Markdown(f"{high_last_day}"))
+                    ])
+                ]),
+                html.Div(className="resume-box", children=[
+                    html.Div(className="box", children=[
+                        html.I(className="material-symbols-outlined",
+                               children="trending_down"),
+                        dcc.Markdown("Average"),
+                        html.Div(id="low_last_day",
+                                 children=dcc.Markdown(f"{round(mean_last_day, 3)}"))
+                    ]),
+                    html.Div(className="box", children=[
+                        html.I(className="material-symbols-outlined",
+                               children="trending_up"),
+                        dcc.Markdown("Standard deviation"),
+                        html.Div(id="high_last_day",
+                                 children=dcc.Markdown(f"{round(std_last_day, 3)}"))
                     ])
                 ])
             ])
