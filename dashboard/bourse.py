@@ -621,7 +621,7 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
         )
 
     return (
-        dcc.Graph(),
+        dcc.Markdown('''Select a company'''),
         [],
         None,
         {'display': 'none'},
