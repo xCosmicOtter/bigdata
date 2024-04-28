@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 external_stylesheets = [
-    #'https://codepen.io/chriddyp/pen/bWLwgP.css',
+    # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
     'https://fonts.googleapis.com/css2?family=Material+Icons&display=block',
     'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0'
 ]
@@ -19,29 +19,36 @@ DATABASE_URI = 'timescaledb://ricou:monmdp@db:5432/bourse'    # inside docker
 # DATABASE_URI = 'timescaledb://ricou:monmdp@localhost:5432/bourse'  # outisde docker
 engine = sqlalchemy.create_engine(DATABASE_URI)
 
-app = dash.Dash(__name__,  title="Bourse", suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__,  title="Bourse", suppress_callback_exceptions=True,
+                external_stylesheets=external_stylesheets)
 server = app.server
 
 graph_options = [
-    {"label": html.Span([html.Img(src="/assets/line.png", height=30), html.Span("Ligne", style={'font-size': 15, 'padding-left': 10})]), "value": "line"},
-    {"label": html.Span([html.Img(src="/assets/candlestick.png", height=30), html.Span("Bougies", style={'font-size': 15, 'padding-left': 10})]), "value": "candlestick"},
-    {"label": html.Span([html.Img(src="/assets/area.png", height=30), html.Span("Aire", style={'font-size': 15, 'padding-left': 10})]), "value": "area"},
+    {"label": html.Span([html.Img(src="/assets/line.png", height=30), html.Span(
+        "Ligne", style={'font-size': 15, 'padding-left': 10})]), "value": "line"},
+    {"label": html.Span([html.Img(src="/assets/candlestick.png", height=30), html.Span(
+        "Bougies", style={'font-size': 15, 'padding-left': 10})]), "value": "candlestick"},
+    {"label": html.Span([html.Img(src="/assets/area.png", height=30), html.Span(
+        "Aire", style={'font-size': 15, 'padding-left': 10})]), "value": "area"},
 ]
+
 
 def getAllName():
     query = '''select name, symbol from companies;'''
-    df = pd.read_sql_query(query,engine)
+    df = pd.read_sql_query(query, engine)
     name_symbol_tuple = list(zip(df['name'], df['symbol']))
-    list_name_symbol = [name + ' • ' + symbol for name, symbol in name_symbol_tuple]
+    list_name_symbol = [name + ' • ' +
+                        symbol for name, symbol in name_symbol_tuple]
     return list_name_symbol
+
 
 app.layout = html.Div(
     children=[
-        #Interval for live clock
+        # Interval for live clock
         dcc.Interval(
             id='interval-component',
             interval=5000,  # Update every 5000 milliseconds (5 seconds)
-                n_intervals=0
+            n_intervals=0
         ),
 
         html.Div(
@@ -51,8 +58,8 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(
-                            className= "logo-text",
-                            children = [
+                            className="logo-text",
+                            children=[
                                 html.Img(
                                     className="logo",
                                     src=app.get_asset_url("analytics.png"),
@@ -64,8 +71,8 @@ app.layout = html.Div(
                 ),
 
                 html.Div(
-                    className = "project-description",
-                    children = [
+                    className="project-description",
+                    children=[
                         dcc.Markdown("""Projet Python Big Data for EPITA."""),
                     ]
                 ),
@@ -95,7 +102,8 @@ app.layout = html.Div(
                             options=getAllName(),
                             multi=True,
                         ),
-                        html.Div(id="warning-container",className="warning-container"),
+                        html.Div(id="warning-container",
+                                 className="warning-container"),
                     ]
                 ),
 
@@ -107,18 +115,18 @@ app.layout = html.Div(
 
                 html.Br(),
                 html.Div(
-                    className = "card card-shadow",
-                    children = [
+                    className="card card-shadow",
+                    children=[
                         html.Div(id='dd-output-graph'),
                         html.Div(
-                            className = "toolbar",
-                            children = [
+                            className="toolbar",
+                            children=[
                                 html.Div(
-                                    className= "toolbar-left",
-                                    children = [
+                                    className="toolbar-left",
+                                    children=[
                                         dcc.Tabs(
-                                            id = "tabs-day",
-                                            colors={"primary": "#F1C086",},
+                                            id="tabs-day",
+                                            colors={"primary": "#F1C086", },
                                             value='5J',
                                             children=[
                                                 dcc.Tab(
@@ -206,8 +214,8 @@ app.layout = html.Div(
                                 ),
 
                                 html.Div(
-                                    className = 'toolbar-right',
-                                    children = [
+                                    className='toolbar-right',
+                                    children=[
                                         html.Div(
                                             id='clock',
                                             className='clock'
@@ -227,19 +235,19 @@ app.layout = html.Div(
 
                 html.Br(),
                 html.Div(
-                    id = "title-table-daystocks",
+                    id="title-table-daystocks",
                     className="card card-shadow",
-                    children = [
+                    children=[
                         html.Div(
-                        className='historical-text',
-                        children=[
-                            dcc.Markdown("""Historical Data"""),
+                            className='historical-text',
+                            children=[
+                                dcc.Markdown("""Historical Data"""),
                             ]
                         ),
                         dcc.Tabs(
                             className='table-daystocks',
-                            id = "table-daystocks",
-                            colors={"primary": "#F1C086",},
+                            id="table-daystocks",
+                            colors={"primary": "#F1C086", },
                             children=[]
                         )
                     ]
@@ -251,9 +259,9 @@ app.layout = html.Div(
             className="three columns day-resume",
             children=[
                 html.Div(
-                    className = "card card-shadow",
-                    id = "resume-text",
-                    children = [
+                    className="card card-shadow",
+                    id="resume-text",
+                    children=[
                         html.Div(
                             className="resume-text",
                             children=[
@@ -262,7 +270,7 @@ app.layout = html.Div(
                         ),
                         dcc.Tabs(
                             className="tabs-summary",
-                            id = "tabs-summary",
+                            id="tabs-summary",
                             colors={"primary": "#F1C086"},
                             vertical=True,
                             children=[]
@@ -286,7 +294,6 @@ app.layout = html.Div(
 # html.Div(id='query-result'),
 
 
-
 @app.callback(
     ddep.Output('clock', 'children'),
     [ddep.Input('interval-component', 'n_intervals')]
@@ -300,7 +307,6 @@ def update_clock(n_intervals):
     utc_offset_hours = utc_offset.total_seconds() / 3600
 
     return f"{local_time} (UTC+{int(utc_offset_hours)})"
-
 
 
 @app.callback(
@@ -319,7 +325,6 @@ def toggle_submenu(n_clicks, selected_value, class_name):
         return "not-visible"
 
 
-
 @app.callback(
     ddep.Output('chart-img', 'src'),
     [ddep.Input('graph-type-dropdown', 'value')]
@@ -335,7 +340,6 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 
-
 @app.callback(
     [ddep.Output('search', 'style'),
      ddep.Output("companyName", "options"),
@@ -346,13 +350,14 @@ def change_image(selected_value):
 def update_search_bar_height(selected_items):
     options = getAllName()
     input_warning = None
-    height= 15
+    height = 15
     if (selected_items != None):
         row = len(selected_items) // 3
-        height = 15 + row  * 35  # Adjust as needed
+        height = 15 + row * 35  # Adjust as needed
         if len(selected_items) >= 6:
             input_warning = html.P(id="warning-container", children=[
-                html.I(className="material-symbols-outlined", children="warning"),
+                html.I(className="material-symbols-outlined",
+                       children="warning"),
                 dcc.Markdown("6 max reached")])
             options = [
                 {"label": option, "value": option, "disabled": True}
@@ -375,14 +380,12 @@ def update_log_button_class(n_clicks):
         return 'toggle-button toggle-off'
 
 
-
-
 @app.callback(
     [ddep.Output('dd-output-graph', 'children'),
-     ddep.Output('table-daystocks','children'),
+     ddep.Output('table-daystocks', 'children'),
      ddep.Output('table-daystocks', 'value'),
-     ddep.Output('title-table-daystocks','style'),
-     ddep.Output('resume-text','style'),
+     ddep.Output('title-table-daystocks', 'style'),
+     ddep.Output('resume-text', 'style'),
      ddep.Output('tabs-summary', 'children'),
      ddep.Output('tabs-summary', 'value'),],
 
@@ -390,7 +393,7 @@ def update_log_button_class(n_clicks):
     [ddep.Input('companyName', 'value'),
      ddep.Input('log-button', 'n_clicks'),
      ddep.Input('graph-type-dropdown', 'value'),
-     ddep.Input('tabs-day','value')],
+     ddep.Input('tabs-day', 'value')],
 
     [ddep.State('log-button', 'className')]
 )
@@ -470,7 +473,8 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 columns=[{'id': c, 'name': c} for c in df.columns],
                 page_size=15
             )
-            tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
+            tabs.append(dcc.Tab(label=symbol, value=symbol,
+                        children=[tab_content]))
 
             last_date = df['date'].iloc[-1].date() if not df.empty else ''
             high_last_day = df['high'].iloc[-1] if not df.empty else ''
@@ -482,42 +486,55 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
             tab_summary_content = html.Div([
                 html.Div(className="resume-box", children=[
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="calendar_month"),
+                        html.I(className="material-symbols-outlined",
+                               children="calendar_month"),
                         dcc.Markdown("Date"),
-                        html.Div(id="last-date", children=dcc.Markdown(f"{last_date}"))
+                        html.Div(id="last-date",
+                                 children=dcc.Markdown(f"{last_date}"))
                     ]),
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="monitoring"),
+                        html.I(className="material-symbols-outlined",
+                               children="monitoring"),
                         dcc.Markdown("Volume"),
-                        html.Div(id="volume_last_day", children=dcc.Markdown(f"{volume_last_day}"))
+                        html.Div(id="volume_last_day",
+                                 children=dcc.Markdown(f"{volume_last_day}"))
                     ])
                 ]),
                 html.Div(className="resume-box", children=[
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="event_available"),
+                        html.I(className="material-symbols-outlined",
+                               children="event_available"),
                         dcc.Markdown("Open"),
-                        html.Div(id="open_last_day", children=dcc.Markdown(f"{open_last_day}"))
+                        html.Div(id="open_last_day",
+                                 children=dcc.Markdown(f"{open_last_day}"))
                     ]),
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="event_busy"),
+                        html.I(className="material-symbols-outlined",
+                               children="event_busy"),
                         dcc.Markdown("Close"),
-                        html.Div(id="close_last_day", children=dcc.Markdown(f"{close_last_day}"))
+                        html.Div(id="close_last_day",
+                                 children=dcc.Markdown(f"{close_last_day}"))
                     ])
                 ]),
                 html.Div(className="resume-box", children=[
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="trending_down"),
+                        html.I(className="material-symbols-outlined",
+                               children="trending_down"),
                         dcc.Markdown("Low"),
-                        html.Div(id="low_last_day", children=dcc.Markdown(f"{low_last_day}"))
+                        html.Div(id="low_last_day",
+                                 children=dcc.Markdown(f"{low_last_day}"))
                     ]),
                     html.Div(className="box", children=[
-                        html.I(className="material-symbols-outlined", children="trending_up"),
+                        html.I(className="material-symbols-outlined",
+                               children="trending_up"),
                         dcc.Markdown("High"),
-                        html.Div(id="high_last_day", children=dcc.Markdown(f"{high_last_day}"))
+                        html.Div(id="high_last_day",
+                                 children=dcc.Markdown(f"{high_last_day}"))
                     ])
                 ])
             ])
-            tabs_summary.append(dcc.Tab(label=symbol, value=symbol, children=[tab_summary_content]))
+            tabs_summary.append(
+                dcc.Tab(label=symbol, value=symbol, children=[tab_summary_content]))
 
         if (graphType == 'line'):
             # Création des subplots avec titres et espacement vertical ajusté
@@ -528,25 +545,29 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 row_heights=[0.8, 0.2]
             )
 
-            color_list = ['#F1C086', '#86BFF1', '#C1F186', '#D486F1', '#F1E386', '#F186C3']
+            color_list = ['#F1C086', '#86BFF1', '#C1F186',
+                          '#D486F1', '#F1E386', '#F186C3']
             for idx, symbol in enumerate(selected_companies):
                 # Ajout des données High avec une ligne
                 df = combined_df.loc[symbol]
                 line_color = color_list[idx]
                 fig.add_trace(
-                    go.Scatter(x=df['date'], y=df['high'], mode='lines', name=symbol, line=dict(color=line_color)),
+                    go.Scatter(x=df['date'], y=df['high'], mode='lines',
+                               name=symbol, line=dict(color=line_color)),
                     row=1, col=1
                 )
 
             # Ajout des données Volume avec un graphique à barres
             fig.add_trace(
-                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                go.Bar(x=df['date'], y=df['volume'],
+                       name='Volume', marker_color='#F1C086'),
                 row=2, col=1
             )
 
             # Ajout des titres et étiquettes des axes
             fig.update_xaxes(title_text="Date", row=2, col=1)
-            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Stock Prices",
+                             row=1, col=1, title_standoff=25)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
 
             if not 'toggle-on' in class_name:
@@ -594,23 +615,25 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 df = combined_df.loc[symbol]
                 fig.add_trace(
                     go.Candlestick(x=df['date'],
-                                open=df['open'],
-                                high=df['high'],
-                                low=df['low'],
-                                close=df['close'],
-                                name=symbol),
+                                   open=df['open'],
+                                   high=df['high'],
+                                   low=df['low'],
+                                   close=df['close'],
+                                   name=symbol),
                     row=1, col=1
                 )
 
             # Ajout des données Volume avec un graphique à barres
             fig.add_trace(
-                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                go.Bar(x=df['date'], y=df['volume'],
+                       name='Volume', marker_color='#F1C086'),
                 row=2, col=1
             )
 
             # Ajout des titres et étiquettes des axes
             fig.update_xaxes(title_text="Date", row=2, col=1)
-            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Stock Prices",
+                             row=1, col=1, title_standoff=25)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
 
             if 'toggle-on' not in class_name:
@@ -657,19 +680,22 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                 # Ajout des données Area
                 df = combined_df.loc[symbol]
                 fig.add_trace(
-                    go.Scatter(x=df['date'], y=df['close'], mode='lines', fill='tozeroy', name=symbol),
+                    go.Scatter(x=df['date'], y=df['close'],
+                               mode='lines', fill='tozeroy', name=symbol),
                     row=1, col=1
                 )
 
             # Ajout des données Volume avec un graphique à barres
             fig.add_trace(
-                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                go.Bar(x=df['date'], y=df['volume'],
+                       name='Volume', marker_color='#F1C086'),
                 row=2, col=1
             )
 
             # Ajout des titres et étiquettes des axes
             fig.update_xaxes(title_text="Date", row=2, col=1)
-            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Stock Prices",
+                             row=1, col=1, title_standoff=25)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
 
             if 'toggle-on' in class_name:
@@ -725,11 +751,10 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
     )
 
 
-@app.callback( ddep.Output('query-result', 'children'),
-               ddep.Input('execute-query', 'n_clicks'),
-               ddep.State('sql-query', 'value'),
-             )
-
+@app.callback(ddep.Output('query-result', 'children'),
+              ddep.Input('execute-query', 'n_clicks'),
+              ddep.State('sql-query', 'value'),
+              )
 def run_query(n_clicks, query):
     if n_clicks > 0:
         try:
@@ -738,7 +763,6 @@ def run_query(n_clicks, query):
         except Exception as e:
             return html.Pre(str(e))
     return "Enter a query and press execute."
-
 
 
 if __name__ == '__main__':
