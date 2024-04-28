@@ -382,7 +382,7 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
             low_last_day = df['low'].iloc[-1] if not df.empty else ''
             close_last_day = df['close'].iloc[-1] if not df.empty else ''
             open_last_day = df['open'].iloc[-1] if not df.empty else ''
-            volume_last_day = -1
+            volume_last_day = df['volume'].iloc[-1] if not df.empty else ''
 
             tab_summary_content = html.Div([
                     html.Div(className="resume-box", children=[
