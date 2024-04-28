@@ -8,6 +8,7 @@ import sqlalchemy
 from datetime import datetime,timezone
 import plotly.express as px
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 external_stylesheets = [
     #'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -81,8 +82,7 @@ app.layout = html.Div(children=[
                 html.I(className='material-icons', children='search'),
                 dcc.Dropdown(placeholder="Select a company", id='companyName',
                             style={
-                                'flex': '1',  
-                                'border-radius': '28px', 
+                                'flex': '1',
                                 'background': '#f6f6f6', 
                                 'transition': 'box-shadow 0.25s',
                                 'border': 'none',     # Apply border style
@@ -93,6 +93,7 @@ app.layout = html.Div(children=[
                             options=getAllName(),
                             multi=True,
                             ),
+                html.Div(id="warning-container",className="warning-container"),
             ]
         ),
         html.Br(),
@@ -109,10 +110,11 @@ app.layout = html.Div(children=[
                                 html.Div(className= "toolbar-left",
                                         children = [
                                                 dcc.Tabs(
+                                                    id = "tabs-day",
                                                     colors={
                                                         "primary": "#F1C086",
                                                     },
-                                                                value='5J',
+                                                    value='5J',
                                                     children=[
                                                     dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style',value='1J'),
                                                     dcc.Tab(label='5J',className='tab-style',selected_className='tab-selected-style',value='5J'),
@@ -162,7 +164,7 @@ app.layout = html.Div(children=[
                                             id='clock',
                                             className='clock'
                                         ),
-                                        html.Button('Log', id='log-button',className='toggle-button')
+                                        html.Button('Log', id='log-button',className='toggle-button toggle-off',n_clicks=0)
                                 
                                 ]),
 
@@ -274,14 +276,43 @@ def change_image(selected_value):
         return "/assets/line.png"
 
 @app.callback(
-    ddep.Output('search', 'style'),
+    [ddep.Output('search', 'style'),
+     ddep.Output("companyName", "options"),
+     ddep.Output("warning-container", "children")],
+
     [ddep.Input('companyName', 'value')]
 )
 def update_search_bar_height(selected_items):
+    options = getAllName()
+    input_warning = None
+    height= 15
     if (selected_items != None):
         row = len(selected_items) // 3
         height = 15 + row  * 35  # Adjust as needed
-        return {'height': f'{height}px'}
+        if len(selected_items) >= 6:
+            input_warning = html.P(id="warning-container", children=[
+                html.I(className="material-symbols-outlined", children="warning"),
+                dcc.Markdown("6 max reached")])
+            options = [
+                {"label": option, "value": option, "disabled": True}
+                for option in options
+            ]
+    return {'height': f'{height}px'}, options, input_warning
+
+
+@app.callback(
+    ddep.Output('log-button', 'className'),
+    [ddep.Input('log-button', 'n_clicks')]
+)
+def update_log_button_class(n_clicks):
+    if n_clicks:
+        if n_clicks % 2 == 0:
+            return 'toggle-button toggle-off'
+        else:
+            return 'toggle-button toggle-on'
+    else:
+        return 'toggle-button toggle-off'
+
 
 @app.callback(
     [ddep.Output('dd-output-graph', 'children'),
@@ -290,52 +321,49 @@ def update_search_bar_height(selected_items):
      ddep.Output('title-table-daystocks','style'),
      ddep.Output('resume-text','style'),
      ddep.Output('tabs-summary', 'children'),
-     ddep.Output('tabs-summary', 'value'),
-     ddep.Output('log-button', 'className'),],
+     ddep.Output('tabs-summary', 'value'),],
 
 
     [ddep.Input('companyName', 'value'),
-     ddep.Input('log-button', 'n_clicks'),
-     ddep.Input('graph-type-dropdown', 'value')],
-
-    [ddep.State('log-button', 'className')]
+     ddep.Input('graph-type-dropdown', 'value'),
+     ddep.Input('tabs-day','value'),
+     ddep.Input('log-button', 'className')],
 )
-def display_graph_and_tabs(values, n_clicks, graphType , class_name):
-    toogleclass = class_name
-    if n_clicks:
-        if 'toggle-on' in class_name:
-            toogleclass = 'toggle-button toggle-off'
-        else:
-            toogleclass = 'toggle-button toggle-on'
-    
+def display_graph_and_tabs(values, graphType,days,isLog):
     if values:
-        traces = []
         combined_df = pd.DataFrame()
+        selected_companies_df = []
+        selected_companies = []
         tabs = []
         tabs_summary = []
 
         for value in values:
-            value = value.split(" • ")[1]
-            query = f"SELECT date, open, high, low, close FROM daystocks where cid = (SELECT id from companies where symbol = '{value}') order by date"
-            df = pd.read_sql_query(query, engine)
-            combined_df = pd.concat([combined_df, df], ignore_index=True)
-            traces.append(go.Scatter(x=df['date'], y=df['high'], mode='lines', name=value))
+            symbol = value.split(" • ")[1]
+            query = f"SELECT date, open, high, low, close, volume FROM daystocks where cid = (SELECT id from companies where symbol = '{symbol}') order by date"
+            company_df = pd.read_sql_query(query, engine)
 
+            selected_companies.append(symbol)
+            selected_companies_df.append(company_df)
+
+        combined_df = pd.concat(selected_companies_df, keys=selected_companies)
+
+        for symbol in selected_companies:
+            df = combined_df.loc[symbol]
             # Create tab content for each value
             tab_content = dash_table.DataTable(
-                id={'type': 'dynamic-table', 'index': value},
+                id={'type': 'dynamic-table', 'index': symbol},
                 data=df.to_dict('records'),
                 columns=[{'id': c, 'name': c} for c in df.columns],
                 page_size=15
             )
-            tabs.append(dcc.Tab(label=value, value=value, children=[tab_content]))
+            tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
 
-       
-            last_date = combined_df['date'].iloc[-1].date() if not combined_df.empty else ''
-            high_last_day = combined_df['high'].iloc[-1] if not combined_df.empty else ''
-            low_last_day = combined_df['low'].iloc[-1] if not combined_df.empty else ''
-            close_last_day = combined_df['close'].iloc[-1] if not combined_df.empty else ''
-            open_last_day = combined_df['open'].iloc[-1] if not combined_df.empty else ''
+            
+            last_date = df['date'].iloc[-1].date() if not df.empty else ''
+            high_last_day = df['high'].iloc[-1] if not df.empty else ''
+            low_last_day = df['low'].iloc[-1] if not df.empty else ''
+            close_last_day = df['close'].iloc[-1] if not df.empty else ''
+            open_last_day = df['open'].iloc[-1] if not df.empty else ''
             volume_last_day = -1
 
             tab_summary_content = html.Div([
@@ -376,11 +404,69 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
                         ])
                     ])
                 ])
-            tabs_summary.append(dcc.Tab(label=value, value=value, children=[tab_summary_content]))
-        
+            tabs_summary.append(dcc.Tab(label=symbol, value=symbol, children=[tab_summary_content]))
 
-        layout = go.Layout(title='Stock Prices', xaxis=dict(title='Date'), yaxis=dict(title='Price'))
-        fig = go.Figure(data=traces, layout=layout)
+        if (graphType == 'line'):
+            # Création des subplots avec titres et espacement vertical ajusté
+            fig = make_subplots(
+                rows=2, cols=1, shared_xaxes=True,
+                subplot_titles=(None, None),
+                vertical_spacing=0.01,
+                row_heights=[0.8, 0.2]
+            )
+
+            color_list = ['#F1C086', '#86BFF1', '#C1F186', '#D486F1', '#F1E386', '#F186C3']
+            for idx, symbol in enumerate(selected_companies):
+                # Ajout des données High avec une ligne
+                df = combined_df.loc[symbol]
+                line_color = color_list[idx]
+                fig.add_trace(
+                    go.Scatter(x=df['date'], y=df['high'], mode='lines', name=symbol, line=dict(color=line_color)),
+                    row=1, col=1
+                )
+
+            # Ajout des données Volume avec un graphique à barres
+            fig.add_trace(
+                go.Bar(x=df['date'], y=df['volume'], name='Volume', marker_color='#F1C086'),
+                row=2, col=1
+            )
+
+            # Ajout des titres et étiquettes des axes
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
+            fig.update_yaxes(title_text="Volume", row=2, col=1)
+
+            if 'toggle-on' in isLog:
+                fig.update_yaxes(type="log", row=1, col=1)
+
+            # Ajout d'un titre général au graphique
+            fig.update_layout(
+                title_text="Analyse des prix des actions et du volume",
+                template="plotly_dark",
+                paper_bgcolor='#131312',  # Couleur de fond du graphique
+                plot_bgcolor='#131312',
+                font=dict(color='rgba(255, 255, 255, 0.7)')
+            )
+
+            # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
+            fig.update_xaxes(
+                ticks="outside",
+                ticklabelmode="period",
+                tickcolor="black",
+                ticklen=10,
+                row=2, col=1
+            )
+
+            # Ajout d'une légende
+            fig.update_layout(legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ))
+
+            fig.update_layout(hovermode="x unified")
 
         return (
             dcc.Graph(figure=fig),
@@ -390,20 +476,17 @@ def display_graph_and_tabs(values, n_clicks, graphType , class_name):
             {'display': 'block'},
             tabs_summary,
             values[-1].split(" • ")[1],
-            toogleclass,
         )
-    
-    return (
-        dcc.Graph(),
-        [],
-        None,
-        {'display': 'none'},
-        {'display': 'none'},
-        [],
-        None,
-        toogleclass,
-    )
 
+    return (
+        dcc.Markdown('''Select a company'''),
+        [],
+        None,
+        {'display': 'none'},
+        {'display': 'none'},
+        [],
+        None,
+    )
 
 
 @app.callback( ddep.Output('query-result', 'children'),
