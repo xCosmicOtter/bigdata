@@ -5,10 +5,9 @@ import dash.dependencies as ddep
 import pandas as pd
 import sqlalchemy
 from plotly.subplots import make_subplots
-from datetime import datetime,timezone
+from datetime import datetime, timedelta, timezone
 import plotly.express as px
 import plotly.graph_objs as go
-from datetime import datetime, timedelta
 
 external_stylesheets = [
     #'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -86,7 +85,6 @@ app.layout = html.Div(
                             id='companyName',
                             style={
                                 'flex': '1',
-                                'border-radius': '28px',
                                 'background': '#f6f6f6',
                                 'transition': 'box-shadow 0.25s',
                                 'border': 'none',     # Apply border style
@@ -97,6 +95,7 @@ app.layout = html.Div(
                             options=getAllName(),
                             multi=True,
                         ),
+                        html.Div(id="warning-container",className="warning-container"),
                     ]
                 ),
 
@@ -216,7 +215,8 @@ app.layout = html.Div(
                                         html.Button(
                                             'Log',
                                             id='log-button',
-                                            className='toggle-button toggle-off'
+                                            className='toggle-button toggle-off',
+                                            n_clicks=0
                                         )
                                     ]
                                 ),
@@ -337,14 +337,43 @@ def change_image(selected_value):
 
 
 @app.callback(
-    ddep.Output('search', 'style'),
+    [ddep.Output('search', 'style'),
+     ddep.Output("companyName", "options"),
+     ddep.Output("warning-container", "children")],
+
     [ddep.Input('companyName', 'value')]
 )
 def update_search_bar_height(selected_items):
+    options = getAllName()
+    input_warning = None
+    height= 15
     if (selected_items != None):
         row = len(selected_items) // 3
         height = 15 + row  * 35  # Adjust as needed
-        return {'height': f'{height}px'}
+        if len(selected_items) >= 6:
+            input_warning = html.P(id="warning-container", children=[
+                html.I(className="material-symbols-outlined", children="warning"),
+                dcc.Markdown("6 max reached")])
+            options = [
+                {"label": option, "value": option, "disabled": True}
+                for option in options
+            ]
+    return {'height': f'{height}px'}, options, input_warning
+
+
+@app.callback(
+    ddep.Output('log-button', 'className'),
+    [ddep.Input('log-button', 'n_clicks')]
+)
+def update_log_button_class(n_clicks):
+    if n_clicks:
+        if n_clicks % 2 == 0:
+            return 'toggle-button toggle-off'
+        else:
+            return 'toggle-button toggle-on'
+    else:
+        return 'toggle-button toggle-off'
+
 
 
 
@@ -355,8 +384,7 @@ def update_search_bar_height(selected_items):
      ddep.Output('title-table-daystocks','style'),
      ddep.Output('resume-text','style'),
      ddep.Output('tabs-summary', 'children'),
-     ddep.Output('tabs-summary', 'value'),
-     ddep.Output('log-button', 'className'),],
+     ddep.Output('tabs-summary', 'value'),],
 
 
     [ddep.Input('companyName', 'value'),
@@ -644,7 +672,7 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
             fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=25)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
 
-            if 'toggle-on' not in class_name:
+            if 'toggle-on' in class_name:
                 fig.update_yaxes(type="log", row=1, col=1)
 
             # Ajout d'un titre général au graphique
@@ -684,7 +712,6 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
             {'display': 'block'},
             tabs_summary,
             values[-1].split(" • ")[1],
-            class_name,
         )
 
     return (
@@ -695,9 +722,7 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
         {'display': 'none'},
         [],
         None,
-        class_name,
     )
-
 
 
 @app.callback( ddep.Output('query-result', 'children'),

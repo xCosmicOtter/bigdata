@@ -517,8 +517,25 @@ input[type="radio"] {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.Select-value-label{
-  color: rgba(255, 255, 255, 0.7) !important;
+.Select-value{
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.Select-value-label
+{
+  color: white;
+  background-color: #1A1B1B;
+}
+
+.Select-value-icon{
+  color: white;
+  background-color: #1A1B1B;
+  border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.Select--multi .Select-value-icon:hover{
+  color : red !important;
+  background-color: #F1C086 !important;
 }
 
 .Select-clear-zone:hover {
@@ -621,7 +638,7 @@ input[type="radio"] {
   display: flex;
   flex-direction: row;
   justify-content: start;
-  flex: 1;
+  flex: 3;
 }
 
 .toolbar-right{
@@ -769,4 +786,9 @@ input[type="radio"] {
 
 .toggle-button.toggle-on{
   color: #F1C086;
+}
+
+.warning-container{
+  text-align: center;
+  color : red;
 }
