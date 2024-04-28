@@ -424,8 +424,7 @@ text color : #F1C086
 */
 body{
   /*background-color: #000000;*/
-  background: rgb(73,73,65);
-  background: linear-gradient(180deg, rgba(73,73,65,1) 0%, rgba(15,15,14,1) 20%, rgba(31,30,30,1) 100%);
+  background: #141515;
   color: #b2b2b2;
   height: 100vh;
   margin: 0;
@@ -458,9 +457,14 @@ body{
 .project-description p{
   font-size: 12px ;
 }
-.title p{
+.historical-text{
+  padding-top: 20px;
+  padding-bottom: 20px;
   font-size: 16px ;
   text-align: center;
+  font-size: large;
+  font-weight: bold;
+  color: #F1C086;
 }
 .div-left-panel{
   padding: 80px 64px 64px 32px;
@@ -618,9 +622,22 @@ input[type="radio"] {
   color: gray !important;
 }
 
-.clock {
-  margin-left: auto;
-  margin-right: 20px;
+.clock{
+  padding-top: 20px;
+}
+.toolbar-left{
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  flex: 1;
+}
+
+.toolbar-right{
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  flex: 1;
+  height: 69px;
 }
 
 .toolbar {
@@ -653,7 +670,7 @@ input[type="radio"] {
 }
 
 .day-resume{
-  padding: 130px 64px 64px 32px;
+  padding: 194px 64px 64px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -661,13 +678,14 @@ input[type="radio"] {
 }
 
 .resume-text{
-  border: 1px solid black;
+  margin-top: 20px;
+  padding-bottom: 20px;
   text-align: center;
   width: 100%;
-  background-color: white;
   height: 50px;
   flex : 1;
-  font-size: medium;
+  font-size: large;
+  font-weight: bold;
   color: #F1C086;
 }
 
@@ -675,14 +693,52 @@ input[type="radio"] {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  background-color: white;
-  width: 100%;
-  height: 100px;
+  width: 290%;
+  height: 126px;
 }
 
 .box{
   flex: 1;
-  justify-content: space-evenly;
-  border-width: 100px;
-  border: 1px solid black;
+  text-align:center;
+}
+
+.card{
+  width: 100%;
+  height: 100%;
+  background: #1A1B1B;
+  padding:2rem;
+  border: 1px solid #3d3d3d2f;
+  border-radius: 1rem;
+}
+
+.card-headder{
+  font-size: 1.5rem;
+  margin-bottom: .5rem;
+}
+
+.card-body{
+  font-size: 0.9rem;
+}
+
+.card-footer{
+  margin-top: 1rem;
+}
+
+.card.card-shadow{
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2);
+}
+
+.toggle-button{
+  color: white;
+  border: none;
+  background-color: transparent;
+  padding-top: 10px;
+}
+
+.toggle-button.toggle-off{
+  color: white;
+}
+
+.toggle-button.toggle-on{
+  color: #F1C086;
 }

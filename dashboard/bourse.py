@@ -101,168 +101,120 @@ app.layout = html.Div(children=[
             inline=True
         ),
         html.Br(),
-        html.Div(id='dd-output-graph'),
-        html.Div(className = "toolbar",children = [
-            dcc.Tabs(
-            colors={
-                "primary": "#F1C086",
-            },
-            value='5J',
-        children=[
-            dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style',value='1J'),
-            dcc.Tab(label='5J',className='tab-style',selected_className='tab-selected-style',value='5J'),
-            dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style',value='1M'),
-            dcc.Tab(label='3M',className='tab-style', selected_className='tab-selected-style',value='3M'),
-            dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style',value='1A'),
-            dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style',value='2A'),
-            dcc.Tab(label='5A', className='tab-style-sep',selected_className='tab-selected-style',value='5A'),
-        ]),
-        html.Div(
-            className='calendar',
-            children=[
-                dcc.DatePickerRange(
-                    month_format='DD/MM/YYYY',
-                    end_date_placeholder_text='JJ/MM/AAAA',
-                    start_date_placeholder_text='JJ/MM/AAAA',
-                    display_format='DD/MM/YYYY'
-                )
-            ]
-        ),
-       
-        html.Div(
-            className='chart-options',
-            children=[
-                # Image cliquable pour ouvrir la liste déroulante
-                html.Img(src="/assets/line.png", id="chart-img", height=50, style={'cursor': 'pointer'}),
-                html.Div(
-                    id="submenu",
-                    className="not-visible",
-                    children=[
-                        # Liste déroulante d'options de type de graphique
-                        dcc.RadioItems(
-                            id='graph-type-dropdown',
-                            options=graph_options,
-                            value='line'
-                        ),
-                    ],
-                ),
-            ]
-        ),
+        html.Div(className = "card card-shadow",
+                 children = [
+                    html.Div(id='dd-output-graph'),
+                    html.Div(className = "toolbar",
+                             children = [
+                                html.Div(className= "toolbar-left",
+                                        children = [
+                                                dcc.Tabs(
+                                                    colors={
+                                                        "primary": "#F1C086",
+                                                    },
+                                                                value='5J',
+                                                    children=[
+                                                    dcc.Tab(label='1J',className='tab-style',selected_className='tab-selected-style',value='1J'),
+                                                    dcc.Tab(label='5J',className='tab-style',selected_className='tab-selected-style',value='5J'),
+                                                    dcc.Tab(label='1M',className='tab-style',selected_className='tab-selected-style',value='1M'),
+                                                    dcc.Tab(label='3M',className='tab-style', selected_className='tab-selected-style',value='3M'),
+                                                    dcc.Tab(label='1A',className='tab-style', selected_className='tab-selected-style',value='1A'),
+                                                    dcc.Tab(label='2A',className='tab-style', selected_className='tab-selected-style',value='2A'),
+                                                    dcc.Tab(label='5A', className='tab-style-sep',selected_className='tab-selected-style',value='5A'),
+                                                ]),
+                                                html.Div(
+                                                    className='calendar',
+                                                    children=[
+                                                        dcc.DatePickerRange(
+                                                            month_format='DD/MM/YYYY',
+                                                            end_date_placeholder_text='JJ/MM/AAAA',
+                                                            start_date_placeholder_text='JJ/MM/AAAA',
+                                                            display_format='DD/MM/YYYY'
+                                                        )
+                                                    ]
+                                                ),
+                                                
+                                                html.Div(
+                                                    className='chart-options',
+                                                    children=[
+                                                        # Image cliquable pour ouvrir la liste déroulante
+                                                        html.Img(src="/assets/line.png", id="chart-img", height=50, style={'cursor': 'pointer'}),
+                                                        html.Div(
+                                                            id="submenu",
+                                                            className="not-visible",
+                                                            children=[
+                                                                # Liste déroulante d'options de type de graphique
+                                                                dcc.RadioItems(
+                                                                    id='graph-type-dropdown',
+                                                                    options=graph_options,
+                                                                    value='line'
+                                                                ),
+                                                            ],
+                                                        ),
+                                                    ]
+                                                ),
+                                        ]),
+                                    
+                                html.Div(
+                                    className = 'toolbar-right',
+                                    children = [
+                                        html.Div(
+                                            id='clock',
+                                            className='clock'
+                                        ),
+                                        html.Button('Log', id='log-button',className='toggle-button')
+                                
+                                ]),
 
-        html.Div(
-            className='clock',
-            id='clock',
+                            ]
+                        )]
         ),
         
-        ]),
         html.Br(),
-        html.Div(
-            className='title',
-            id = "title-table-daystocks",
+        html.Div(id = "title-table-daystocks",className="card card-shadow", children = [
+            html.Div(
+            className='historical-text',
             children=[
                 dcc.Markdown(
                     """
                     Historical Data
                     """
                 ),
-            ]
-        ),
-        dcc.Tabs(
-            className='table-daystocks',
-            id = "table-daystocks",
-            colors={
-                "primary": "#F1C086",
-            },
-        children=[])
-    ]),
+                ]),
+                dcc.Tabs(
+                    className='table-daystocks',
+                    id = "table-daystocks",
+                    colors={
+                        "primary": "#F1C086",
+                    },
+                children=[])
+        ]),
+        
+        ]),
     html.Div(
             className="three columns day-resume",
             children=[
-                html.Div(
-                    className="resume-text",
-                    children=[
-                        dcc.Markdown(
-                                """
-                                Day Summary
-                                """)]),
-                html.Div(
-                    className="resume-box",
-                    children=[
-                        html.Div(
-                        className="box",
-                        children= [
-                             html.I(className="material-symbols-outlined", children="calendar_month"),
-                             dcc.Markdown(
-                                """
-                                Date
-                                """ ),
-                                html.Div(id = "last-date")
-                        ]),
-                        html.Div(
-                        className="box",
-                        children= [
-                            html.I(className="material-symbols-outlined", children="monitoring"),
-                             dcc.Markdown(
-                                """
-                                Volume
-                                """ ),
+                html.Div(className = "card card-shadow",
+                         id = "resume-text",
+                         children = [
                             html.Div(
-                                id = "volume_last_day")
-                        ])]
-                ),
-                 html.Div(
-                    className="resume-box",
-                    children=[
-                        html.Div(
-                        className="box",
-                        children= [
-                            html.I(className="material-symbols-outlined", children="event_available"),
-                             dcc.Markdown(
-                                """
-                                Open
-                                """ ),
-                            html.Div(
-                                id = "open_last_day")
-                        ]),
-                        html.Div(
-                        className="box",
-                        children= [
-                            html.I(className="material-symbols-outlined", children="event_busy"),
-                             dcc.Markdown(
-                                """
-                                Close
-                                """ ),
-                            html.Div(
-                                id = "close_last_day")
-                        ])]
-                ),
-                html.Div(
-                    className="resume-box",
-                    children=[
-                        html.Div(
-                        className="box",
-                        children= [
-                            html.I(className="material-symbols-outlined", children="trending_down"),
-                             dcc.Markdown(
-                                """
-                                Low
-                                """ ),
-                            html.Div(
-                                id = "low_last_day")
-                        ]),
-                        html.Div(
-                        className="box",
-                        children= [
-                            html.I(className="material-symbols-outlined", children="trending_up"),
-                             dcc.Markdown(
-                                """
-                                High
-                                """ ),
-                            html.Div(
-                                id = "high_last_day")
-
-                        ])]
-                ),
+                                className="resume-text",
+                                children=[
+                                            dcc.Markdown(
+                                            """
+                                            Day Summary
+                                            """)
+                                        ]),
+                            dcc.Tabs(
+                                    className="tabs-summary", 
+                                    id = "tabs-summary",
+                                    colors={
+                                        "primary": "#F1C086",
+                                    },
+                                    vertical=True,
+                            children=[])
+                            ])
+                            
                 
             ])])
 
@@ -332,14 +284,35 @@ def update_search_bar_height(selected_items):
         return {'height': f'{height}px'}
 
 @app.callback(
-    [ddep.Output('dd-output-graph', 'children'),ddep.Output('table-daystocks','children'),ddep.Output('table-daystocks', 'value'),ddep.Output('title-table-daystocks','style'),ddep.Output('last-date','children'),ddep.Output('high_last_day','children'),ddep.Output('low_last_day','children'),ddep.Output('close_last_day','children'),ddep.Output('open_last_day','children'),ddep.Output('volume_last_day','children')],
-    [ddep.Input('companyName', 'value'),ddep.Input('graph-type-dropdown', 'value')]
+    [ddep.Output('dd-output-graph', 'children'),
+     ddep.Output('table-daystocks','children'),
+     ddep.Output('table-daystocks', 'value'),
+     ddep.Output('title-table-daystocks','style'),
+     ddep.Output('resume-text','style'),
+     ddep.Output('tabs-summary', 'children'),
+     ddep.Output('tabs-summary', 'value'),
+     ddep.Output('log-button', 'className'),],
+
+
+    [ddep.Input('companyName', 'value'),
+     ddep.Input('log-button', 'n_clicks'),
+     ddep.Input('graph-type-dropdown', 'value')],
+
+    [ddep.State('log-button', 'className')]
 )
-def display_graph_and_tabs(values, graphType):
+def display_graph_and_tabs(values, n_clicks, graphType , class_name):
+    toogleclass = class_name
+    if n_clicks:
+        if 'toggle-on' in class_name:
+            toogleclass = 'toggle-button toggle-off'
+        else:
+            toogleclass = 'toggle-button toggle-on'
+    
     if values:
         traces = []
         combined_df = pd.DataFrame()
         tabs = []
+        tabs_summary = []
 
         for value in values:
             value = value.split(" • ")[1]
@@ -357,26 +330,67 @@ def display_graph_and_tabs(values, graphType):
             )
             tabs.append(dcc.Tab(label=value, value=value, children=[tab_content]))
 
+       
+            last_date = combined_df['date'].iloc[-1].date() if not combined_df.empty else ''
+            high_last_day = combined_df['high'].iloc[-1] if not combined_df.empty else ''
+            low_last_day = combined_df['low'].iloc[-1] if not combined_df.empty else ''
+            close_last_day = combined_df['close'].iloc[-1] if not combined_df.empty else ''
+            open_last_day = combined_df['open'].iloc[-1] if not combined_df.empty else ''
+            volume_last_day = -1
+
+            tab_summary_content = html.Div([
+                    html.Div(className="resume-box", children=[
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="calendar_month"),
+                            dcc.Markdown("Date"),
+                            html.Div(id="last-date", children=dcc.Markdown(f"{last_date}"))
+                        ]),
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="monitoring"),
+                            dcc.Markdown("Volume"),
+                            html.Div(id="volume_last_day", children=dcc.Markdown(f"{volume_last_day}"))
+                        ])
+                    ]),
+                    html.Div(className="resume-box", children=[
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="event_available"),
+                            dcc.Markdown("Open"),
+                            html.Div(id="open_last_day", children=dcc.Markdown(f"{open_last_day}"))
+                        ]),
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="event_busy"),
+                            dcc.Markdown("Close"),
+                            html.Div(id="close_last_day", children=dcc.Markdown(f"{close_last_day}"))
+                        ])
+                    ]),
+                    html.Div(className="resume-box", children=[
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="trending_down"),
+                            dcc.Markdown("Low"),
+                            html.Div(id="low_last_day", children=dcc.Markdown(f"{low_last_day}"))
+                        ]),
+                        html.Div(className="box", children=[
+                            html.I(className="material-symbols-outlined", children="trending_up"),
+                            dcc.Markdown("High"),
+                            html.Div(id="high_last_day", children=dcc.Markdown(f"{high_last_day}"))
+                        ])
+                    ])
+                ])
+            tabs_summary.append(dcc.Tab(label=value, value=value, children=[tab_summary_content]))
+        
+
         layout = go.Layout(title='Stock Prices', xaxis=dict(title='Date'), yaxis=dict(title='Price'))
         fig = go.Figure(data=traces, layout=layout)
-
-        last_date = combined_df['date'].iloc[-1].date() if not combined_df.empty else ''
-        high_last_day = combined_df['high'].iloc[-1] if not combined_df.empty else ''
-        low_last_day = combined_df['low'].iloc[-1] if not combined_df.empty else ''
-        close_last_day = combined_df['close'].iloc[-1] if not combined_df.empty else ''
-        open_last_day = combined_df['open'].iloc[-1] if not combined_df.empty else ''
 
         return (
             dcc.Graph(figure=fig),
             tabs,
             values[-1].split(" • ")[1],
             {'display': 'block'} if len(tabs) >= 1 else {'display': 'none'},
-            dcc.Markdown(f"{last_date}"),
-            dcc.Markdown(f"{high_last_day}"),
-            dcc.Markdown(f"{low_last_day}"),
-            dcc.Markdown(f"{close_last_day}"),
-            dcc.Markdown(f"{open_last_day}"),
-            dcc.Markdown('')
+            {'display': 'block'},
+            tabs_summary,
+            values[-1].split(" • ")[1],
+            toogleclass,
         )
     
     return (
@@ -384,13 +398,12 @@ def display_graph_and_tabs(values, graphType):
         [],
         None,
         {'display': 'none'},
-        dcc.Markdown(''''''),
-        dcc.Markdown(''''''),
-        dcc.Markdown(''''''),
-        dcc.Markdown(''''''),
-        dcc.Markdown(''''''),
-        dcc.Markdown('''''')
+        {'display': 'none'},
+        [],
+        None,
+        toogleclass,
     )
+
 
 
 @app.callback( ddep.Output('query-result', 'children'),
