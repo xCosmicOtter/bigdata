@@ -449,7 +449,8 @@ body{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-bottom: 0.5px solid white !important;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  padding: 20px
 }
 
 .project-description p{
@@ -553,6 +554,7 @@ input[type="radio"] {
 .DateRangePickerInput{
   background: transparent !important;
   border: none !important;
+  padding-right: 50px !important;
 }
 
 .DayPickerKeyboardShortcuts_buttonReset {
@@ -629,6 +631,18 @@ input[type="radio"] {
   color: gray !important;
 }
 
+.DateRangePickerInput_clearDates{
+  margin-left: 20px;
+}
+
+.DateRangePickerInput_clearDates:hover{
+  background-color: transparent;
+}
+
+.DateRangePickerInput_clearDates_svg:hover{
+  fill:#F1C086
+}
+
 .clock{
   padding-top: 20px;
 }
@@ -640,6 +654,7 @@ input[type="radio"] {
 }
 
 .toolbar-right{
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   justify-content: end;
@@ -772,10 +787,12 @@ input[type="radio"] {
 }
 
 .toggle-button{
+  height: 40px !important;
   color: white;
   border: none;
   background-color: transparent;
-  padding-top: 10px;
+  margin: 10px;
+  padding: none;
 }
 
 .toggle-button.toggle-off{
@@ -786,7 +803,23 @@ input[type="radio"] {
   color: #F1C086;
 }
 
+.toggle-button:hover{
+  background-color: #333;
+}
+
 .warning-container{
   text-align: center;
   color : red;
+}
+
+.no-company{
+  font-size: 20px;
+  color: #F1C086;
+  padding-bottom: 20px;  
+}
+
+.no-data{
+  color: red;
+  font-size: 20px;
+  padding-bottom: 20px;
 }

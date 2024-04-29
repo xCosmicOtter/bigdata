@@ -181,7 +181,12 @@ app.layout = html.Div(
                                                     month_format='DD/MM/YYYY',
                                                     end_date_placeholder_text='JJ/MM/AAAA',
                                                     start_date_placeholder_text='JJ/MM/AAAA',
-                                                    display_format='DD/MM/YYYY'
+                                                    display_format='DD/MM/YYYY',
+                                                    minimum_nights=4,
+                                                    min_date_allowed="2019-01-01",
+                                                    max_date_allowed="2023-12-31",
+                                                    initial_visible_month="2023-12-01",
+                                                    clearable=True
                                                 )
                                             ]
                                         ),
@@ -371,13 +376,10 @@ def update_search_bar_height(selected_items):
     [ddep.Input('log-button', 'n_clicks')]
 )
 def update_log_button_class(n_clicks):
-    if n_clicks:
-        if n_clicks % 2 == 0:
-            return 'toggle-button toggle-off'
-        else:
-            return 'toggle-button toggle-on'
-    else:
+    if n_clicks % 2 == 0:
         return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
 
 
 @app.callback(
@@ -391,19 +393,11 @@ def update_log_button_class(n_clicks):
 
 
     [ddep.Input('companyName', 'value'),
-     ddep.Input('log-button', 'n_clicks'),
      ddep.Input('graph-type-dropdown', 'value'),
-     ddep.Input('tabs-day', 'value')],
-
-    [ddep.State('log-button', 'className')]
+     ddep.Input('tabs-day', 'value'),
+     ddep.Input('log-button', 'className')],
 )
-def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name):
-    if n_clicks:
-        if 'toggle-on' in class_name:
-            class_name = 'toggle-button toggle-off'
-        else:
-            class_name = 'toggle-button toggle-on'
-
+def display_graph_and_tabs(values, graphType, time_period, class_name):
     def generate_query(symbol, time_period):
         last_day_2023 = datetime(2023, 12, 31)
 
@@ -570,7 +564,7 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
                              row=1, col=1, title_standoff=25)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
 
-            if not 'toggle-on' in class_name:
+            if 'toggle-on' in class_name:
                 fig.update_yaxes(type="log", row=1, col=1)
 
             # Ajout d'un titre général au graphique
@@ -741,7 +735,15 @@ def display_graph_and_tabs(values, n_clicks, graphType, time_period, class_name)
         )
 
     return (
-        dcc.Markdown('''Select a company'''),
+        html.P(
+            children=[
+                html.Span("NO DATA", className="no-data"),
+                html.Span(
+                    " - ", style={'color': 'white', 'font-size': '20px'}),
+                html.Span("PLEASE SELECT A COMPANY",
+                          className="no-company")
+            ]
+        ),
         [],
         None,
         {'display': 'none'},
