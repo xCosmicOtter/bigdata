@@ -462,7 +462,7 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
                 FROM stocks
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
-                ORDER BY date desc"""
+                ORDER BY date"""
             return query, False
         else:
             query = f"""
@@ -470,7 +470,7 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
                 FROM daystocks
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
-                ORDER BY date desc"""
+                ORDER BY date"""
             return query, True
 
 
@@ -512,7 +512,7 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
                 'type': 'dynamic-table',
                 'index': symbol
             },
-            data=df.to_dict('records'),
+            data=df.iloc[::-1].to_dict('records'),
             columns=[{'id': c, 'name': c} for c in df.columns],
             page_size=15,
             style_header={
@@ -635,10 +635,10 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=lower_band.shift(-20),
+                y=lower_band, #.shift(10)
                 mode='lines',
-                line=dict(color=light_line_color),
-                name='Bollinger Band',
+                line=dict(color=light_line_color, dash='dot'),
+                name='Lower Bollinger Band',
                 showlegend=False,
             ),
             row=1, col=1
@@ -647,9 +647,10 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=upper_band.shift(-20),
+                y=upper_band, #.shift(10)
                 mode='lines',
-                line=dict(color=light_line_color),
+                line=dict(color=light_line_color, dash='dot'),
+                name='Higher Bollinger Band',
                 fill='tonexty',
                 fillcolor=fill_color,
                 showlegend=False,
@@ -741,9 +742,10 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
 
     if 'toggle-on' in class_name_log:
         fig.update_yaxes(type="log", row=1, col=1)
+        fig.update_yaxes(type="log", row=2, col=1)
 
     # Ajout des données Volume avec un graphique à barres
-    if graph_dimension == 1:
+    if graph_dimension == 1 and is_daystocks:
         fig.add_trace(
             go.Bar(
                 x=df['date'],
@@ -754,35 +756,45 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
             row=2, col=1
         )
 
+    # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
+    if graph_dimension == 1 and is_daystocks:
+        fig.update_xaxes(
+            ticks="outside",
+            ticklabelmode="period",
+            tickcolor="white",
+            ticklen=10,
+            row=2, col=1,
+        )
+
+    if is_daystocks:
+        fig.update_xaxes(
+            row=1, col=1,
+            rangebreaks=[
+                dict(bounds=["sat", "mon"])
+            ]
+        )
+    else:
+        fig.update_xaxes(
+            row=1, col=1,
+            type='category'
+        )
+
     # Ajout d'un titre général au graphique
     fig.update_layout(
         title_text="Analyse des prix des actions et du volume",
         template="plotly_dark",
         paper_bgcolor='#131312',  # Couleur de fond du graphique
         plot_bgcolor='#131312',
-        font=dict(color='rgba(255, 255, 255, 0.7)')
+        font=dict(color='rgba(255, 255, 255, 0.7)'),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ),
+        hovermode="x unified"
     )
-
-    # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
-    if graph_dimension == 1:
-        fig.update_xaxes(
-            ticks="outside",
-            ticklabelmode="period",
-            tickcolor="black",
-            ticklen=10,
-            row=2, col=1
-        )
-
-    # Ajout d'une légende
-    fig.update_layout(legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ))
-
-    fig.update_layout(hovermode="x unified")
 
     return (
         dcc.Graph(figure=fig),
