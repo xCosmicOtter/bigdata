@@ -175,7 +175,12 @@ app.layout = html.Div(
                                                     month_format='DD/MM/YYYY',
                                                     end_date_placeholder_text='JJ/MM/AAAA',
                                                     start_date_placeholder_text='JJ/MM/AAAA',
-                                                    display_format='DD/MM/YYYY'
+                                                    display_format='DD/MM/YYYY',
+                                                    minimum_nights=5,
+                                                    min_date_allowed="2019-01-01",
+                                                    max_date_allowed="2023-12-31",
+                                                    initial_visible_month="2023-12-01",
+                                                    clearable=True
                                                 )
                                             ]
                                         ),
@@ -738,14 +743,14 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
     fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=20)
 
     if graph_dimension == 1:
-        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1, rangemode="tozero")
 
     if 'toggle-on' in class_name_log:
         fig.update_yaxes(type="log", row=1, col=1)
         fig.update_yaxes(type="log", row=2, col=1)
 
     # Ajout des données Volume avec un graphique à barres
-    if graph_dimension == 1 and is_daystocks:
+    if graph_dimension == 1:
         fig.add_trace(
             go.Bar(
                 x=df['date'],
@@ -757,7 +762,7 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
         )
 
     # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
-    if graph_dimension == 1 and is_daystocks:
+    if graph_dimension == 1:
         fig.update_xaxes(
             ticks="outside",
             ticklabelmode="period",
@@ -770,13 +775,17 @@ def display_graph_and_tabs(values, n_clicks_log, n_clicks_bollinger, graphType, 
         fig.update_xaxes(
             row=1, col=1,
             rangebreaks=[
-                dict(bounds=["sat", "mon"])
+                dict(bounds=["sat", "mon"]),
+                #dict(bounds=[18, 9], pattern="hour")
             ]
         )
     else:
         fig.update_xaxes(
             row=1, col=1,
-            type='category'
+            rangebreaks=[
+                dict(bounds=["sat", "mon"]),
+                dict(bounds=[18, 16], pattern="hour")
+            ]
         )
 
     # Ajout d'un titre général au graphique
