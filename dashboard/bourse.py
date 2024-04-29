@@ -215,22 +215,22 @@ app.layout = html.Div(
                                 html.Div(
                                     className='toolbar-right',
                                     children=[
-                                        html.Div(
-                                            id='clock',
-                                            className='clock'
-                                        ),
                                         html.Button(
-                                            'Bollinger',
+                                            children='Bollinger',
                                             id='bollinger-button',
                                             className='toggle-button toggle-off',
                                             n_clicks=0
                                         ),
                                         html.Button(
-                                            'Log',
+                                            children='Log',
                                             id='log-button',
                                             className='toggle-button toggle-off',
                                             n_clicks=0
-                                        )
+                                        ),
+                                        html.Div(
+                                            id='clock',
+                                            className='clock'
+                                        ),
                                     ]
                                 ),
                             ]
@@ -297,7 +297,6 @@ app.layout = html.Div(
         html.Div(id='query-result'),
     ]
 )
-
 
 
 @app.callback(
@@ -374,7 +373,7 @@ def update_search_bar_height(selected_items):
 
 @app.callback(
     ddep.Output('log-button', 'className'),
-    [ddep.Input('log-button', 'n_clicks')]
+    ddep.Input('log-button', 'n_clicks')
 )
 def update_log_button_class(n_clicks):
     if n_clicks % 2 == 0:
@@ -385,16 +384,13 @@ def update_log_button_class(n_clicks):
 
 @app.callback(
     ddep.Output('bollinger-button', 'className'),
-    [ddep.Input('bollinger-button', 'n_clicks')]
+    ddep.Input('bollinger-button', 'n_clicks')
 )
 def update_bollinger_button_class(n_clicks):
-    if n_clicks:
-        if n_clicks % 2 == 0:
-            return 'toggle-button toggle-off'
-        else:
-            return 'toggle-button toggle-on'
-    else:
+    if n_clicks % 2 == 0:
         return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
 
 
 @app.callback(
@@ -411,7 +407,7 @@ def update_bollinger_button_class(n_clicks):
      ddep.Input('graph-type-dropdown', 'value'),
      ddep.Input('tabs-day', 'value'),
      ddep.Input('log-button', 'className'),
-     ddep.State('bollinger-button', 'className')]
+     ddep.Input('bollinger-button', 'className')]
 )
 def display_graph_and_tabs(values, graphType, time_period, class_name_log, class_name_bollinger):
     if not values:
@@ -419,17 +415,19 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             html.P(
                 children=[
                     html.Span("NO DATA", className="no-data"),
-                    html.Span(" - ", style={'color': 'white', 'font-size': '20px'}),
-                    html.Span("PLEASE SELECT A COMPANY", className="no-company")
+                    html.Span(
+                        " - ", style={'color': 'white', 'font-size': '20px'}),
+                    html.Span("PLEASE SELECT A COMPANY",
+                              className="no-company")
                 ]
             ),
-        [],
-        None,
-        {'display': 'none'},
-        {'display': 'none'},
-        [],
-        None,
-    )
+            [],
+            None,
+            {'display': 'none'},
+            {'display': 'none'},
+            [],
+            None,
+        )
 
     def generate_query(symbol, time_period):
         last_day_2023 = datetime(2023, 12, 31)
@@ -465,7 +463,6 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
                 ORDER BY date"""
             return query, True
-
 
     def decrease_brightness(color, factor):
         """Diminue la clarté d'une couleur donnée par un certain facteur."""
@@ -519,7 +516,8 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                 'color': 'rgba(255, 255, 255, 0.7)'
             }
         )
-        tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
+        tabs.append(dcc.Tab(label=symbol, value=symbol,
+                    children=[tab_content]))
 
         last_date = df['date'].iloc[-1].date() if not df.empty else ''
         volume_last_day = df['volume'].iloc[-1] if not df.empty else ''
@@ -611,7 +609,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         )
 
     def compute_bollinger(fig, df, line_color):
-        if 'toggle-on' not in class_name_bollinger:
+        if 'toggle-off' in class_name_bollinger:
             return
         light_line_color = decrease_brightness(line_color, 0.65)
 
@@ -628,7 +626,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=lower_band, #.shift(10)
+                y=lower_band,  # .shift(10)
                 mode='lines',
                 line=dict(color=light_line_color, dash='dot'),
                 name='Lower Bollinger Band',
@@ -640,7 +638,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=upper_band, #.shift(10)
+                y=upper_band,  # .shift(10)
                 mode='lines',
                 line=dict(color=light_line_color, dash='dot'),
                 name='Higher Bollinger Band',
@@ -668,7 +666,6 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             rows=1
         )
 
-
     color_list = ['#F1C086', '#86BFF1', '#C1F186',
                   '#D486F1', '#F1E386', '#F186C3']
     if (graphType == 'line'):
@@ -687,8 +684,10 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             compute_bollinger(fig, df, line_color)
 
     elif (graphType == 'candlestick'):
-        increasing_colors = ['green', 'cyan', 'blue', 'orange', 'purple', 'yellow']
-        decreasing_colors = ['darkred', 'gray', 'red', 'darkgreen', 'darkorange', 'darkblue']
+        increasing_colors = ['green', 'cyan',
+                             'blue', 'orange', 'purple', 'yellow']
+        decreasing_colors = ['darkred', 'gray', 'red',
+                             'darkgreen', 'darkorange', 'darkblue']
 
         for idx, symbol in enumerate(selected_companies):
             # Ajout des données Candlesticks
@@ -728,7 +727,8 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
 
     # Ajout des titres et étiquettes des axes
     fig.update_xaxes(title_text="Date", row=2, col=1)
-    fig.update_yaxes(title_text="Stock Prices", row=1, col=1, title_standoff=20)
+    fig.update_yaxes(title_text="Stock Prices",
+                     row=1, col=1, title_standoff=20)
 
     if graph_dimension == 1:
         fig.update_yaxes(title_text="Volume", row=2, col=1, rangemode="tozero")
@@ -764,7 +764,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             row=1, col=1,
             rangebreaks=[
                 dict(bounds=["sat", "mon"]),
-                #dict(bounds=[18, 9], pattern="hour")
+                # dict(bounds=[18, 9], pattern="hour")
             ]
         )
     else:
