@@ -787,7 +787,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.update_xaxes(
             row=1, col=1,
             rangebreaks=[
-                dict(bounds=["sat", "mon"]),
+                dict(bounds=["sat", "sun"]),
                 # dict(bounds=[18, 9], pattern="hour")
             ]
         )
@@ -795,8 +795,8 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.update_xaxes(
             row=1, col=1,
             rangebreaks=[
-                dict(bounds=["sat", "mon"]),
-                dict(bounds=[18, 16], pattern="hour")
+                dict(bounds=["sat", "sun"]),
+                dict(bounds=[18, 9], pattern="hour")
             ]
         )
 
