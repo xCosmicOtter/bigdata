@@ -8,6 +8,7 @@ from plotly.subplots import make_subplots
 from datetime import datetime, timedelta, timezone
 import plotly.express as px
 import plotly.graph_objs as go
+import dash_daq as daq
 
 external_stylesheets = [
     # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -235,6 +236,29 @@ app.layout = html.Div(
                                 ),
                             ]
                         )
+                    ]
+                ),
+
+                html.Br(),
+                html.Div(
+                    id="title-pie-chart",
+                    className="card card-shadow",
+                    children=[
+                        html.Div(
+                            className='historical-text',
+                            children=[
+                            dcc.Markdown("""Value Repartition"""),
+                            ]
+                        ),
+                        html.Div(
+                            id="pie-chart"
+                        ),
+                        html.Div(
+                            id="input-chart"
+                        ),
+                        html.Div(
+                            id="pepito"
+                        ),
                     ]
                 ),
 
@@ -675,7 +699,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             fig.add_trace(
                 go.Scatter(
                     x=df['date'],
-                    y=df['high'],
+                    y=df['close'],
                     mode='lines',
                     name=symbol,
                     line=dict(color=line_color)
@@ -717,7 +741,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             fig.add_trace(
                 go.Scatter(
                     x=df['date'],
-                    y=df['high'],
+                    y=df['close'],
                     mode='lines',
                     fill='tozeroy',
                     name=symbol,
@@ -728,14 +752,14 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
     # Ajout des titres et étiquettes des axes
     fig.update_xaxes(title_text="Date", row=2, col=1)
     fig.update_yaxes(title_text="Stock Prices",
-                     row=1, col=1, title_standoff=20)
+                     row=1, col=1, title_standoff=20, rangemode="tozero")
 
     if graph_dimension == 1:
         fig.update_yaxes(title_text="Volume", row=2, col=1, rangemode="tozero")
 
     if 'toggle-on' in class_name_log:
-        fig.update_yaxes(type="log", row=1, col=1)
-        fig.update_yaxes(type="log", row=2, col=1)
+        fig.update_yaxes(type="log", row=1, col=1, rangemode="tozero")
+        fig.update_yaxes(type="log", row=2, col=1, rangemode="tozero")
 
     # Ajout des données Volume avec un graphique à barres
     if graph_dimension == 1:
@@ -802,6 +826,62 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         tabs_summary,
         values[-1].split(" • ")[1],
     )
+
+
+@app.callback(
+    [ddep.Output('pie-chart', 'children'),
+     ddep.Output('input-chart', 'children'),
+     ddep.Output('pepito', 'children')],
+    [ddep.Input('companyName', 'value'),
+     ddep.Input('input-chart', 'children')]
+)
+def update_search_bar_height(selected_items, input_repartition):
+    if selected_items is None or len(selected_items) == 0:
+        return ([
+            html.P(
+                children=[
+                    html.Span("NO DATA", className="no-data"),
+                    html.Span(" - ", style={'color': 'white', 'font-size': '20px'}),
+                    html.Span("PLEASE SELECT A COMPANY", className="no-company")
+                ]
+            ),
+            dcc.Markdown('''32'''),
+            dcc.Markdown('''42''')
+        ])
+
+    selected_options = []
+    last_values = []
+    for companie in selected_items:
+        symbol = companie.split(" • ")[1]
+        query = f"""
+                SELECT date, close
+                FROM daystocks
+                WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
+                ORDER BY date desc limit 1"""
+        current_df = pd.read_sql_query(query, engine)
+        current_df['name'] =  companie.split(" • ")[0]
+        last_values.append(current_df)
+
+        selected_options.append(
+            daq.NumericInput(
+                label=companie.split(" • ")[0],
+                labelPosition='bottom',
+                value=1,
+                style={"display": 'inline-block'}
+            )
+        )
+
+    # Create initial pie chart
+
+    df_final = pd.concat(last_values)
+    fig = px.pie(df_final, values='close', names='name', hole=0.3)
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor='#131312',  # Couleur de fond du graphique
+        plot_bgcolor='#131312')
+    # Create input
+    return dcc.Graph(figure=fig), selected_options, dcc.Markdown(f'''{input_repartition}''')
+
 
 
 @app.callback(ddep.Output('query-result', 'children'),

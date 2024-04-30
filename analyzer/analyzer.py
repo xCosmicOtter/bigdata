@@ -142,7 +142,7 @@ def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.T
 
     # Apply aggregations
     daystocks_df = daystocks_df.groupby(['symbol', daystocks_df['timestamp'].dt.date]).agg({
-        'last': ['last', 'first', "min", "max", "mean", "std"],
+        'last': ['first', 'last', "min", "max", "mean", "std"],
         'volume': "first",
     }).reset_index()
 
