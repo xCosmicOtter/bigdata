@@ -5,13 +5,11 @@ import os
 import multiprocessing
 from glob import glob
 from datetime import datetime
-from logzero import logger
 from collections import defaultdict
 
 import timescaledb_model as tsdb
 
-db = tsdb.TimescaleStockMarketModel(
-    'bourse', 'ricou', 'db', 'monmdp')        # inside docker
+db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'db', 'monmdp')        # inside docker
 # db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'localhost', 'monmdp') # outside docker
 
 # ---- Utils functions ---- #
@@ -112,7 +110,7 @@ def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_
     companies_df.drop(columns=["tmp_filter"], inplace=True)
 
     # Write inside table
-    logger.debug(
+    print(
         f"Applying filter -> before: {before_filter} elts && after: {len(companies_df.symbol)} elts")
     db.df_write(companies_df, "companies", commit=True, index=False)
 
@@ -224,12 +222,12 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     start = time.time()
     filenames_with_index = list(enumerate(files))
     data = read_files_multiprocessed(filenames_with_index)
-    logger.debug(f"Time taken to read files [with M] {time.time() - start}")
+    print(f"Time taken to read files [with M] {time.time() - start}")
 
     # CONCAT FINAL DATA
     start = time.time()
     df = pd.concat(data).reset_index(level=1, drop=True)
-    logger.debug(f"Time taken to concat files {time.time() - start}")
+    print(f"Time taken to concat files {time.time() - start}")
 
     # CLEAN DATA
     df.drop_duplicates(inplace=True)
@@ -239,21 +237,21 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     # COMPUTE COMPANIES
     start = time.time()
     compute_companies(df, website, market_id, market_name)
-    logger.debug(f"Time taken to compute companies {time.time() - start}")
+    print(f"Time taken to compute companies {time.time() - start}")
 
     compagnies_df = get_companies_id()
 
     # COMPUTE STOCKS and DAYSTOCKS
     start = time.time()
     compute_stocks_daystocks(df, compagnies_df)
-    logger.debug(
+    print(
         f"Time taken to compute stocks/daystocks [with M] {time.time() - start}")
 
     # Check the files as processed
     start = time.time()
     db.df_write(pd.DataFrame({'name': files}),
                 "file_done", commit=True, index=False)
-    logger.debug(f"Time taken to save done files {time.time() - start}")
+    print(f"Time taken to save done files {time.time() - start}")
 
 
 # ---- Main loop ---- #
@@ -263,7 +261,7 @@ def main() -> None:
     data_path = "data"
 
     # MAIN PROCESS
-    logger.debug(f"Work in progress...")
+    print(f"Work in progress...")
     starting_time = time.time()
     for stock in os.listdir(data_path):
         stock_path = f"{data_path}/{stock}"
@@ -290,7 +288,7 @@ def main() -> None:
 
             # Work on the data with batches (represented by month)
             for market_name, month_dict in sorted(market_files.items()):
-                logger.debug(
+                print(
                     f"Loading {market_name} ({year}) data for {stock}.")
                 market_starting_time = time.time()
 
@@ -302,15 +300,15 @@ def main() -> None:
 
                 subprocessing_time = round(
                     time.time() - market_starting_time, 3)
-                logger.debug(f"# = Processing complete for {market_name} data in {year} in"
+                print(f"# = Processing complete for {market_name} data in {year} in"
                              f" {subprocessing_time} seconds. = #")
 
             yearprocessing_time = round(time.time() - starting_year_time, 3)
-            logger.debug(
+            print(
                 f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
 
     rounded_processing_time = round(time.time() - starting_time, 3)
-    logger.debug(
+    print(
         f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
 
 
