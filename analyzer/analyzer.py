@@ -5,17 +5,19 @@ import os
 import multiprocessing
 from glob import glob
 from datetime import datetime
-from logzero import logger
 from collections import defaultdict
 
 import timescaledb_model as tsdb
 
 db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'db', 'monmdp')        # inside docker
-#db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'localhost', 'monmdp') # outside docker
+# db = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'localhost', 'monmdp') # outside docker
 
 # ---- Utils functions ---- #
+
+
 def parse_filename(filename: str) -> datetime:
     return datetime.strptime(filename[-30:-4], "%Y-%m-%d %H:%M:%S.%f")
+
 
 def clean_values_volumes(df: pd.DataFrame) -> None:
     # Clean values
@@ -29,14 +31,44 @@ def clean_values_volumes(df: pd.DataFrame) -> None:
     overflow_mask = df['volume'] > 2147483647
     df.loc[overflow_mask, 'volume'] = np.iinfo(np.int32).max
 
+
+"""
+def replace_errors(group: pd.DataFrame) -> pd.DataFrame:
+    # First, Third Quantile and Inter Quantile
+    Q1 = group['last'].quantile(0.25)
+    Q3 = group['last'].quantile(0.75)
+
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 5 * IQR
+    upper_bound = Q3 + 5 * IQR
+
+    # Identify erroneous data
+    erroneous_indices = group['last'].index[(group['last'] < lower_bound) | (group['last'] > upper_bound)]
+
+    # Interpolate erroneous data
+    if len(erroneous_indices) == 0:
+        return group
+
+    # Replace erroneous values with NaN for interpolation
+    group.loc[erroneous_indices, 'last'] = np.nan
+
+    # Interpolate using linear interpolation
+    group['last'] = group['last'].interpolate(method='linear', limit_direction='both')
+
+    return group
+"""
+
+
 def custom_sort_key(file_path: str) -> str:
     return file_path[-22:-4]
 
 
 # ---- SQL requests functions ---- #
 def get_market_id(market_name: str) -> int:
-    get_id = db.raw_query(f"SELECT id FROM markets WHERE alias = '{market_name}'")
+    get_id = db.raw_query(
+        f"SELECT id FROM markets WHERE alias = '{market_name}'")
     return int(get_id[0][0]) if len(get_id) != 0 else None
+
 
 def get_companies_id() -> pd.DataFrame:
     return db.df_query('SELECT id, symbol FROM companies', chunksize=None)
@@ -45,8 +77,9 @@ def get_companies_id() -> pd.DataFrame:
 # ---- SQL requests functions ---- #
 companies_dict = defaultdict(set)
 
+
 def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_name: str) -> None:
-    companies_df = df[['name','symbol']].copy().drop_duplicates()
+    companies_df = df[['name', 'symbol']].copy().drop_duplicates()
     companies_df.reset_index(drop=True, inplace=True)
     companies_df['mid'] = market_id
 
@@ -71,20 +104,24 @@ def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_
         companies_dict[symbol].add(name)
 
     # Applying the filter
-    companies_df["tmp_filter"] = list(zip(companies_df["symbol"], companies_df["name"]))
+    companies_df["tmp_filter"] = list(
+        zip(companies_df["symbol"], companies_df["name"]))
     companies_df = companies_df[~companies_df["tmp_filter"].isin(filter_list)]
     companies_df.drop(columns=["tmp_filter"], inplace=True)
 
     # Write inside table
-    logger.debug(f"Applying filter -> before: {before_filter} elts && after: {len(companies_df.symbol)} elts")
+    print(
+        f"Applying filter -> before: {before_filter} elts && after: {len(companies_df.symbol)} elts")
     db.df_write(companies_df, "companies", commit=True, index=False)
+
 
 def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
     stock_df = df[['symbol', 'last', 'volume']].copy().drop_duplicates()
     stock_df.reset_index(names='date', inplace=True)
 
     # Merge stock_df with compagnies_df to get the cid
-    stock_df = stock_df.merge(compagnies_df, left_on='symbol', right_on='symbol', how='left')
+    stock_df = stock_df.merge(
+        compagnies_df, left_on='symbol', right_on='symbol', how='left')
     stock_df.drop(columns=['symbol'], inplace=True)
     stock_df.rename(columns={'last': 'value', 'id': 'cid'}, inplace=True)
     stock_df['cid'] = stock_df['cid'].fillna(0)
@@ -92,28 +129,32 @@ def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.Time
     # Write inside tables
     sdb.df_write(stock_df, 'stocks', commit=True, index=False)
 
+
 def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
-    daystocks_df = df.copy()    #TODO: Drop duplicate??
+    daystocks_df = df.copy()  # TODO: Drop duplicate??
 
     daystocks_df.reset_index(names="timestamp", inplace=True)
-    grouped = daystocks_df.groupby(['symbol', daystocks_df['timestamp'].dt.date])
+    # Apply the function to each group
+    # grouped = daystocks_df.groupby(['symbol'])
+    # daystocks_df = grouped.apply(replace_errors)
 
     # Apply aggregations
-    daystocks_df = grouped.agg({
-        'last': ['last', 'first', "min", "max"],
+    daystocks_df = daystocks_df.groupby(['symbol', daystocks_df['timestamp'].dt.date]).agg({
+        'last': ['first', 'last', "min", "max", "mean", "std"],
         'volume': "first",
-    })
-    daystocks_df.reset_index(inplace=True)
+    }).reset_index()
 
     # Rename columns for better clarity
-    daystocks_df.columns = ['symbol', 'date', 'open', 'close', 'low', 'high', 'volume']
+    daystocks_df.columns = ['symbol', 'date', 'open', 'close',
+                            'low', 'high', 'average', 'standard_deviation', 'volume']
 
     # Merge daystocks_df with compagnies_df to get the cid
-    daystocks_df = daystocks_df.merge(compagnies_df, left_on='symbol', right_on='symbol', how='left')
+    daystocks_df = daystocks_df.merge(
+        compagnies_df, left_on='symbol', right_on='symbol', how='left')
     daystocks_df.drop(columns=['symbol'], inplace=True)
     daystocks_df.rename(columns={'id': 'cid'}, inplace=True)
 
-    # Fill daystocks_df without cid with 0
+    # Fill daystocks_df without cid with 0 (peapme)
     daystocks_df['cid'] = daystocks_df['cid'].fillna(0)
 
     # Write inside tables
@@ -123,9 +164,11 @@ def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.T
 # ---- MultiProcessing file reading ---- #
 num_processes = multiprocessing.cpu_count()
 
+
 def read_file(filename_index_pair: tuple) -> tuple:
     index, filename = filename_index_pair
     return index, parse_filename(filename), pd.read_pickle(filename)
+
 
 def read_files_multiprocessed(filenames_with_index: list) -> dict:
     data = {}
@@ -145,11 +188,14 @@ def read_files_multiprocessed(filenames_with_index: list) -> dict:
         data[key] = value
     return data
 
+
 def process_data(args: tuple) -> None:
     day_df, compagnies_df = args
-    sdb = tsdb.TimescaleStockMarketModel('bourse', 'ricou', 'db', 'monmdp', is_sub=True)
+    sdb = tsdb.TimescaleStockMarketModel(
+        'bourse', 'ricou', 'db', 'monmdp', is_sub=True)
     compute_stocks(day_df, compagnies_df, sdb)
     compute_daystocks(day_df, compagnies_df, sdb)
+
 
 def compute_stocks_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame) -> None:
     daily_infos = []
@@ -176,12 +222,12 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     start = time.time()
     filenames_with_index = list(enumerate(files))
     data = read_files_multiprocessed(filenames_with_index)
-    logger.debug(f"Time taken to read files [with M] {time.time() - start}")
+    print(f"Time taken to read files [with M] {time.time() - start}")
 
     # CONCAT FINAL DATA
     start = time.time()
     df = pd.concat(data).reset_index(level=1, drop=True)
-    logger.debug(f"Time taken to concat files {time.time() - start}")
+    print(f"Time taken to concat files {time.time() - start}")
 
     # CLEAN DATA
     df.drop_duplicates(inplace=True)
@@ -191,19 +237,21 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     # COMPUTE COMPANIES
     start = time.time()
     compute_companies(df, website, market_id, market_name)
-    logger.debug(f"Time taken to compute companies {time.time() - start}")
+    print(f"Time taken to compute companies {time.time() - start}")
 
     compagnies_df = get_companies_id()
 
     # COMPUTE STOCKS and DAYSTOCKS
     start = time.time()
     compute_stocks_daystocks(df, compagnies_df)
-    logger.debug(f"Time taken to compute stocks/daystocks [with M] {time.time() - start}")
+    print(
+        f"Time taken to compute stocks/daystocks [with M] {time.time() - start}")
 
     # Check the files as processed
     start = time.time()
-    db.df_write(pd.DataFrame({'name': files}), "file_done", commit=True, index=False)
-    logger.debug(f"Time taken to save done files {time.time() - start}")
+    db.df_write(pd.DataFrame({'name': files}),
+                "file_done", commit=True, index=False)
+    print(f"Time taken to save done files {time.time() - start}")
 
 
 # ---- Main loop ---- #
@@ -213,7 +261,7 @@ def main() -> None:
     data_path = "data"
 
     # MAIN PROCESS
-    logger.debug(f"Work in progress...")
+    print(f"Work in progress...")
     starting_time = time.time()
     for stock in os.listdir(data_path):
         stock_path = f"{data_path}/{stock}"
@@ -240,7 +288,8 @@ def main() -> None:
 
             # Work on the data with batches (represented by month)
             for market_name, month_dict in sorted(market_files.items()):
-                logger.debug(f"Loading {market_name} ({year}) data for {stock}.")
+                print(
+                    f"Loading {market_name} ({year}) data for {stock}.")
                 market_starting_time = time.time()
 
                 market_id = get_market_id(market_name)
@@ -249,16 +298,20 @@ def main() -> None:
 
                     store_file(files_list, stock, market_name, market_id)
 
-                subprocessing_time = round(time.time() - market_starting_time, 3)
-                logger.debug(f"# = Processing complete for {market_name} data in {year} in"
-                            f" {subprocessing_time} seconds. = #")
+                subprocessing_time = round(
+                    time.time() - market_starting_time, 3)
+                print(f"# = Processing complete for {market_name} data in {year} in"
+                             f" {subprocessing_time} seconds. = #")
 
             yearprocessing_time = round(time.time() - starting_year_time, 3)
-            logger.debug(f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
+            print(
+                f"# === Processing complete for {year} in {yearprocessing_time} seconds. === #")
 
     rounded_processing_time = round(time.time() - starting_time, 3)
-    logger.debug(f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
+    print(
+        f"Work done on {files_count} files, in {rounded_processing_time} seconds.")
+
 
 if __name__ == '__main__':
-    main()
+    #main()
     print('Done')

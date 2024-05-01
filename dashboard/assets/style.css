@@ -16,7 +16,7 @@
 - Media Queries
 */
 
-/* PLotly.js 
+/* PLotly.js
 ââââââââââââââââââââââââââââââââââââââââââââââââââ */
 /* plotly.js's modebar's z-index is 1001 by default
  * https://github.com/plotly/plotly.js/blob/7e4d8ab164258f6bd48be56589dacd9bdd7fded2/src/css/_modebar.scss#L5
@@ -166,7 +166,7 @@ blockquote {
 /* Links
 ââââââââââââââââââââââââââââââââââââââââââââââââââ */
 a {
-  color: #1EAEDB; 
+  color: #1EAEDB;
   text-decoration: underline;
   cursor: pointer;}
 a:hover {
@@ -250,7 +250,7 @@ select {
   border: 1px solid #D1D1D1;
   border-radius: 4px;
   box-shadow: none;
-  box-sizing: border-box; 
+  box-sizing: border-box;
   font-family: inherit;
   font-size: inherit; /*https://stackoverflow.com/questions/6080413/why-doesnt-input-inherit-the-font-from-body*/}
 /* Removes awkward default styles on some inputs for iOS */
@@ -323,8 +323,7 @@ table {
 th:not(.CalendarDay),
 td:not(.CalendarDay) {
   padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #E1E1E1; }
+  text-align: left; }
 th:first-child:not(.CalendarDay),
 td:first-child:not(.CalendarDay) {
   padding-left: 0; }
@@ -373,8 +372,7 @@ ol {
 hr {
   margin-top: 3rem;
   margin-bottom: 3.5rem;
-  border-width: 0;
-  border-top: 1px solid #E1E1E1; }
+  border-width: 0;}
 
 
 /* Clearing
@@ -417,13 +415,19 @@ there.
 /* Custom App CSS
 -------------------------------------------------- */
 
+/*
+Main color : #1B1A1A
+Secondary color : #131312
+text color : #F1C086
+*/
 body{
-  background-color: #1a1c23;
+  background:  #141515;
   color: #b2b2b2;
   height: 100vh;
   margin: 0;
 }
 
+/* top panel */
 .logo{
   width: 50%;
   max-width: 50px;
@@ -434,37 +438,39 @@ body{
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  color: #F1C086;
 }
 
-.logo-text p {
-  margin: 0;
-}
-
-.div-left-panel{
-  background-color: #22252b;
+.div-top-panel {
+  background-color: #131312;
   color: #b2b2b2;
-  margin: 0px;
-  height:100vh;
-  padding: 32px;
-  /*overflow-y: scroll;*/
+  height: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  padding: 20px
 }
 
 .project-description p{
   font-size: 12px ;
 }
 
-.div-right-panel{
+.div-left-panel{
   padding: 80px 64px 64px 32px;
 }
 
+/* window graph type */
 .visible {
+  background: #1A1B1B !important;
+  padding:2rem !important;
+  border: 1px solid #3d3d3d2f !important;
+  border-radius: 1rem;
   display: block;
   position: absolute;
   overflow: auto;
   z-index: 20;
-  border-color: 1px solid  white !important;
-  background: #22252b;
-  padding: 20px;
 }
 
 .not-visible{
@@ -477,45 +483,419 @@ input[type="radio"] {
   position: absolute;
 }
 
-.flex-container {
+/* seach bar*/
+.search {
+  --padding: 15px 10px 10px 10px;
+
+  width: max-content;
   display: flex;
-  justify-content: space-between; /* Pour espacer les éléments horizontalement */
+  align-items: center;
+  padding: var(--padding);
+  border-radius: 28px;
+  background: #131312 ;
+  transition: box-shadow 0.25s;
+  width: 800px;
+  height: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.search-bar {
-  flex: 3;/* Pour que la première partie occupe 3 unités de l'espace disponible */
-  padding-right: 20px;
+.search:hover{
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
 }
 
+.Select-input > input{
+  color : white !important;
+}
+
+.material-icons {
+  padding-left: 10px;
+  padding-bottom: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 22px;
+}
+
+.Select-placeholder
+{
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.Select-value{
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.Select-value-label
+{
+  color: white;
+  background-color: #1A1B1B;
+}
+
+.Select-value-icon{
+  color: white;
+  background-color: #1A1B1B;
+  border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.Select--multi .Select-value-icon:hover{
+  color : red !important;
+  background-color: #F1C086 !important;
+}
+
+.Select-clear-zone:hover {
+  color: white !important;
+}
+
+.Select-clear:hover{
+  color:#F1C086;
+}
+
+/* searbar options */
+.VirtualizedSelectOption {
+  background-color: #1A1B1B;
+  border-color: #777
+}
+
+.VirtualizedSelectFocusedOption {
+  background-color: #333;
+}
+
+/* chart type */
 .chart-options {
-  flex: 1; /* Pour que la deuxième partie occupe 1 unité de l'espace disponible */
+  margin-left: 20px;
+  margin-top: 25px;
+  font-size: 20px;
 }
 
+/* calendar */
 .calendar {
-  flex: 3;
+  padding-top: 20px;
+  padding-left: 10px;
 }
 
+.DateRangePickerInput{
+  background: transparent !important;
+  border: none !important;
+}
+
+.DayPickerKeyboardShortcuts_buttonReset {
+  display: none;
+}
+
+.DateInput{
+  background: transparent !important;
+}
+
+.DateInput_input {
+  background: #131312 !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.DateRangePickerInput_arrow_svg {
+  background-color: transparent !important;
+  color: white;
+}
+
+.DayPicker,
+.CalendarMonthGrid,
+.CalendarMonth {
+  background: #131312 !important;
+  border-radius: 0;
+}
+
+.CalendarDay,
+.CalendarMonth_caption {
+  background: #131312 !important;
+  color: white;
+  border-color: white !important;
+}
+
+.DayPicker_weekHeader
+{
+  color: white;
+}
+
+.DayPickerNavigation_button__default {
+  background: #1A1B1C !important;
+}
+
+.CalendarDay:hover {
+  text-decoration: underline;
+}
+
+.CalendarDay__selected {
+  background-color: #F1C086 !important;
+  color: red
+}
+
+.CalendarDay__selected_span,
+.CalendarDay__selected_span:hover,
+.CalendarDay__selected_span:active,
+.CalendarDay__selected_span:disabled {
+  background: #f7d6b2 !important;
+  border: 1px double #999999 !important;
+  color: gray !important;
+}
+
+.CalendarDay__highlighted_calendar:active,
+.CalendarDay__highlighted_calendar:hover {
+  background: #777777 !important;
+  color: gray !important;
+}
+
+.CalendarDay__hovered_span,
+.CalendarDay__hovered_span:hover,
+.CalendarDay__hovered_span:active{
+  background: #f7d6b2 !important;
+  border: 1px double #666666 !important;
+  color: gray !important;
+}
+
+.DateRangePickerInput_clearDates{
+  padding: 0;
+}
+
+.DateRangePickerInput_clearDates:hover{
+  background-color: transparent;
+}
+
+.DateRangePickerInput_clearDates_svg:hover{
+  fill:#F1C086
+}
+
+#chart-img.material-symbols-outlined{
+  font-size: 35px !important;
+  color: #F1C086 !important;
+}
+
+/* clock */
+.clock{
+  padding: 20px 20px 0px 20px;
+}
+
+/* toolbar */
+.toolbar-left{
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  flex: 1.5;
+}
+
+.toolbar-right{
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  flex: 1;
+  height: 69px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* days tab */
 .tab-selected-style {
-  border-bottom: 3px solid #119DFF !important;
-  color:#119DFF !important;
+  border-top: none !important;
+  border-bottom: 0.5px solid #F1C086 !important;
+  color:#F1C086 !important;
   background-color: transparent !important;
 }
 
+#tabs-summary .tab--selected{
+  color: #F1C086;
+  border-top:none !important;
+  background-color: #141515;
+}
+
+#table-daystocks .tab--selected{
+  color: #F1C086;
+  background-color: #141515;
+}
+
+#tabs-summary .tab{
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
 .tab-style {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-}
-
-.tab-style-left {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-  border-left: 1px solid rgb(168, 162, 162) !important;
-}
-
-.tab-style-right {
-  border-top: 1px solid rgb(168, 162, 162) !important;
-  border-right: 1px solid rgb(168, 162, 162) !important;
+  width: 20px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-style-sep {
-  border-top: 1px solid rgb(168, 162, 162) !important;
   border-right: 1px dotted rgb(168, 162, 162) !important;
+  width: 20px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* day resume */
+.day-resume{
+  padding: 194px 64px 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* historical table */
+.historical-text{
+  padding-top: 20px;
+  padding-bottom: 20px;
+  font-size: 16px ;
+  text-align: center;
+  font-size: large;
+  font-weight: bold;
+  color: #F1C086;
+  text-decoration: underline;
+  text-decoration-color: #b2b2b2;
+}
+
+/* resume text */
+.resume-text{
+  margin-top: 20px;
+  padding-bottom: 20px;
+  text-align: center;
+  width: 100%;
+  height: 50px;
+  flex : 1;
+  font-size: large;
+  font-weight: bold;
+  color: #F1C086;
+  text-decoration: underline;
+  text-decoration-color: #b2b2b2;
+}
+
+.resume-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 110px;
+}
+
+/* tab day resume */
+.tab-parent--vert,
+.tab-content--vert
+{
+  width: 100%;
+}
+
+.box{
+  flex: 1;
+  text-align:center;
+}
+
+/* card */
+.card{
+  width: 100%;
+  height: 100%;
+  background: #1A1B1B;
+  padding:2rem;
+  border: 1px solid #3d3d3d2f;
+  border-radius: 1rem;
+}
+
+.card-headder{
+  font-size: 1.5rem;
+  margin-bottom: .5rem;
+}
+
+.card-body{
+  font-size: 0.9rem;
+}
+
+.card-footer{
+  margin-top: 1rem;
+}
+
+.card.card-shadow{
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2);
+}
+
+/* display none to not show when first load page */
+#resume-text.card.card-shadow{
+  display: none
+}
+
+#title-table-daystocks.card.card-shadow{
+  display: none
+}
+
+#graph.card.card-shadow{
+  display: none
+}
+
+#toolbar.card.card-shadow{
+  display: none
+}
+
+#graph.card.card-shadow p{
+  padding: 20px 20px 0px 20px;
+}
+
+/*toggle button*/
+.toggle-button{
+  height: 40px !important;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: transparent;
+  margin: 10px;
+  padding: none;
+}
+
+.toggle-button.toggle-off{
+  color: white;
+}
+
+.toggle-button.toggle-on{
+  color: #F1C086;
+}
+
+.toggle-button:hover{
+  background-color: #333;
+}
+
+/* warning search bar*/
+.warning-container{
+  text-align: center;
+  color : red;
+}
+
+/*no company selected*/
+.no-company{
+  font-size: 20px;
+  color: #F1C086;
+  padding-bottom: 20px;  
+}
+
+.no-data{
+  color: red;
+  font-size: 20px;
+  padding-bottom: 20px;
+}
+
+/*button table */
+.current-page{
+  background-color: #F1C086 !important;
+  border-bottom: none !important;
+}
+.previous-next-container button.first-page:hover{
+  color:#F1C086 !important;
+}
+.previous-next-container button.last-page:hover {
+  color: #F1C086 !important;
+}
+.dash-table-container .previous-next-container button.next-page:hover{
+  color:#F1C086 !important;
+}
+
+.dash-table-container .previous-next-container button.previous-page:hover{
+  color: #F1C086 !important;
 }
