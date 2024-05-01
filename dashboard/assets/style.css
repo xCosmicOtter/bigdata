@@ -421,13 +421,13 @@ Secondary color : #131312
 text color : #F1C086
 */
 body{
-  /*background-color: #000000;*/
   background:  #141515;
   color: #b2b2b2;
   height: 100vh;
   margin: 0;
 }
 
+/* top panel */
 .logo{
   width: 50%;
   max-width: 50px;
@@ -461,14 +461,16 @@ body{
   padding: 80px 64px 64px 32px;
 }
 
+/* window graph type */
 .visible {
+  background: #1A1B1B !important;
+  padding:2rem !important;
+  border: 1px solid #3d3d3d2f !important;
+  border-radius: 1rem;
   display: block;
   position: absolute;
   overflow: auto;
   z-index: 20;
-  border-color: 1px solid  white !important;
-  background: #1A1B1C;
-  padding: 20px;
 }
 
 .not-visible{
@@ -481,6 +483,7 @@ input[type="radio"] {
   position: absolute;
 }
 
+/* seach bar*/
 .search {
   --padding: 15px 10px 10px 10px;
 
@@ -541,11 +544,28 @@ input[type="radio"] {
   color: white !important;
 }
 
-.chart-options {
-  padding-top: 10px;
-  padding-left: 20px
+.Select-clear:hover{
+  color:#F1C086;
 }
 
+/* searbar options */
+.VirtualizedSelectOption {
+  background-color: #1A1B1B;
+  border-color: #777
+}
+
+.VirtualizedSelectFocusedOption {
+  background-color: #333;
+}
+
+/* chart type */
+.chart-options {
+  margin-left: 20px;
+  margin-top: 25px;
+  font-size: 20px;
+}
+
+/* calendar */
 .calendar {
   padding-top: 20px;
   padding-left: 10px;
@@ -554,7 +574,6 @@ input[type="radio"] {
 .DateRangePickerInput{
   background: transparent !important;
   border: none !important;
-  padding-right: 50px !important;
 }
 
 .DayPickerKeyboardShortcuts_buttonReset {
@@ -632,7 +651,7 @@ input[type="radio"] {
 }
 
 .DateRangePickerInput_clearDates{
-  margin-left: 20px;
+  padding: 0;
 }
 
 .DateRangePickerInput_clearDates:hover{
@@ -643,14 +662,22 @@ input[type="radio"] {
   fill:#F1C086
 }
 
-.clock{
-  padding-top: 20px;
+#chart-img.material-symbols-outlined{
+  font-size: 35px !important;
+  color: #F1C086 !important;
 }
+
+/* clock */
+.clock{
+  padding: 20px 20px 0px 20px;
+}
+
+/* toolbar */
 .toolbar-left{
   display: flex;
   flex-direction: row;
   justify-content: start;
-  flex: 2;
+  flex: 1.5;
 }
 
 .toolbar-right{
@@ -669,6 +696,7 @@ input[type="radio"] {
   justify-content: center;
 }
 
+/* days tab */
 .tab-selected-style {
   border-top: none !important;
   border-bottom: 0.5px solid #F1C086 !important;
@@ -707,6 +735,7 @@ input[type="radio"] {
   justify-content: center;
 }
 
+/* day resume */
 .day-resume{
   padding: 194px 64px 64px 32px;
   display: flex;
@@ -715,7 +744,7 @@ input[type="radio"] {
   justify-content: center;
 }
 
-
+/* historical table */
 .historical-text{
   padding-top: 20px;
   padding-bottom: 20px;
@@ -727,6 +756,8 @@ input[type="radio"] {
   text-decoration: underline;
   text-decoration-color: #b2b2b2;
 }
+
+/* resume text */
 .resume-text{
   margin-top: 20px;
   padding-bottom: 20px;
@@ -746,9 +777,10 @@ input[type="radio"] {
   flex-direction: row;
   justify-content: space-evenly;
   width: 100%;
-  height: 126px;
+  height: 110px;
 }
 
+/* tab day resume */
 .tab-parent--vert,
 .tab-content--vert
 {
@@ -760,6 +792,7 @@ input[type="radio"] {
   text-align:center;
 }
 
+/* card */
 .card{
   width: 100%;
   height: 100%;
@@ -786,10 +819,32 @@ input[type="radio"] {
   box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2);
 }
 
+/* display none to not show when first load page */
+#resume-text.card.card-shadow{
+  display: none
+}
+
+#title-table-daystocks.card.card-shadow{
+  display: none
+}
+
+#graph.card.card-shadow{
+  display: none
+}
+
+#toolbar.card.card-shadow{
+  display: none
+}
+
+#graph.card.card-shadow p{
+  padding: 20px 20px 0px 20px;
+}
+
+/*toggle button*/
 .toggle-button{
   height: 40px !important;
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   background-color: transparent;
   margin: 10px;
   padding: none;
@@ -807,11 +862,13 @@ input[type="radio"] {
   background-color: #333;
 }
 
+/* warning search bar*/
 .warning-container{
   text-align: center;
   color : red;
 }
 
+/*no company selected*/
 .no-company{
   font-size: 20px;
   color: #F1C086;
@@ -822,4 +879,23 @@ input[type="radio"] {
   color: red;
   font-size: 20px;
   padding-bottom: 20px;
+}
+
+/*button table */
+.current-page{
+  background-color: #F1C086 !important;
+  border-bottom: none !important;
+}
+.previous-next-container button.first-page:hover{
+  color:#F1C086 !important;
+}
+.previous-next-container button.last-page:hover {
+  color: #F1C086 !important;
+}
+.dash-table-container .previous-next-container button.next-page:hover{
+  color:#F1C086 !important;
+}
+
+.dash-table-container .previous-next-container button.previous-page:hover{
+  color: #F1C086 !important;
 }

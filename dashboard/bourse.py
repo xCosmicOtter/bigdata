@@ -25,12 +25,15 @@ app = dash.Dash(__name__,  title="Bourse", suppress_callback_exceptions=True,
 server = app.server
 
 graph_options = [
-    {"label": html.Span([html.Img(src="/assets/line.png", height=30), html.Span(
-        "Ligne", style={'font-size': 15, 'padding-left': 10})]), "value": "line"},
-    {"label": html.Span([html.Img(src="/assets/candlestick.png", height=30), html.Span(
-        "Bougies", style={'font-size': 15, 'padding-left': 10})]), "value": "candlestick"},
-    {"label": html.Span([html.Img(src="/assets/area.png", height=30), html.Span(
-        "Aire", style={'font-size': 15, 'padding-left': 10})]), "value": "area"},
+    {"label": html.Div(style={'display': 'flex'}, children=[html.I(
+        className="material-symbols-outlined", children="ssid_chart", style={'font-size': '35px', 'padding-top': '10px', 'color': '#F1C086'}), html.Div(
+        "Line", style={'font-size': '18px', 'padding': '18px 20px 10px 20px', 'color': '#decfcf'})]), "value": "line"},
+    {"label": html.Div(style={'display': 'flex'}, children=[html.I(
+        className="material-symbols-outlined", children="candlestick_chart", style={'font-size': '35px', 'padding-top': '10px', 'color': '#F1C086'}), html.Div(
+        "Candlestick", style={'font-size': '18px', 'padding': '18px 20px 10px 20px', 'color': '#decfcf'})]), "value": "candlestick"},
+    {"label": html.Div(style={'display': 'flex'}, children=[html.I(
+        className="material-symbols-outlined", children="area_chart", style={'font-size': '35px', 'padding-top': '10px', 'color': '#F1C086'}), html.Div(
+        "Area", style={'font-size': '18px', 'padding': '18px 20px 0px 20px', 'color': '#decfcf'})]), "value": "area"},
 ]
 
 
@@ -117,10 +120,12 @@ app.layout = html.Div(
                 html.Br(),
                 html.Div(
                     className="card card-shadow",
+                    id="graph",
                     children=[
                         html.Div(id='dd-output-graph'),
                         html.Div(
                             className="toolbar",
+                            id="toolbar",
                             children=[
                                 html.Div(
                                     className="toolbar-left",
@@ -190,12 +195,8 @@ app.layout = html.Div(
                                             className='chart-options',
                                             children=[
                                                 # Image cliquable pour ouvrir la liste déroulante
-                                                html.Img(
-                                                    src="/assets/line.png",
-                                                    id="chart-img",
-                                                    height=50,
-                                                    style={'cursor': 'pointer'}
-                                                ),
+                                                html.I(
+                                                    className="material-symbols-outlined", id="chart-img", style={'cursor': 'pointer'}, children="ssid_chart"),
                                                 html.Div(
                                                     id="submenu",
                                                     className="not-visible",
@@ -308,22 +309,22 @@ app.layout = html.Div(
                 )
             ]
         ),
-        dcc.Textarea(
-            id='sql-query',
-            value='''
-            SELECT * FROM pg_catalog.pg_tables
-                WHERE schemaname != 'pg_catalog' AND
-                    schemaname != 'information_schema';
-            ''',
-            style={'width': '100%', 'height': 100},
-        ),
-        html.Button('Execute', id='execute-query', n_clicks=0),
-        html.Div(id='query-result'),
+        # dcc.Textarea(
+        #     id='sql-query',
+        #     value='''
+        #     SELECT * FROM pg_catalog.pg_tables
+        #         WHERE schemaname != 'pg_catalog' AND
+        #             schemaname != 'information_schema';
+        #     ''',
+        #     style={'width': '100%', 'height': 100},
+        # ),
+        # html.Button('Execute', id='execute-query', n_clicks=0),
+        # html.Div(id='query-result'),
     ]
 )
 
 
-@app.callback(
+@ app.callback(
     ddep.Output('clock', 'children'),
     [ddep.Input('interval-component', 'n_intervals')]
 )
@@ -338,7 +339,7 @@ def update_clock(n_intervals):
     return f"{local_time} (UTC+{int(utc_offset_hours)})"
 
 
-@app.callback(
+@ app.callback(
     ddep.Output("submenu", "className"),
     [ddep.Input("chart-img", "n_clicks"),
      ddep.Input('graph-type-dropdown', 'value')],
@@ -354,22 +355,22 @@ def toggle_submenu(n_clicks, selected_value, class_name):
         return "not-visible"
 
 
-@app.callback(
-    ddep.Output('chart-img', 'src'),
+@ app.callback(
+    ddep.Output('chart-img', 'children'),
     [ddep.Input('graph-type-dropdown', 'value')]
 )
 def change_image(selected_value):
     if selected_value == 'line':
-        return "/assets/line.png"
+        return "ssid_chart"
     elif selected_value == 'candlestick':
-        return "/assets/candlestick.png"
+        return "candlestick_chart"
     elif selected_value == 'area':
-        return "/assets/area.png"
+        return "area_chart"
     else:
-        return "/assets/line.png"
+        return "ssid_chart"
 
 
-@app.callback(
+@ app.callback(
     [ddep.Output('search', 'style'),
      ddep.Output("companyName", "options"),
      ddep.Output("warning-container", "children")],
@@ -395,7 +396,7 @@ def update_search_bar_height(selected_items):
     return {'height': f'{height}px'}, options, input_warning
 
 
-@app.callback(
+@ app.callback(
     ddep.Output('log-button', 'className'),
     ddep.Input('log-button', 'n_clicks')
 )
@@ -406,7 +407,7 @@ def update_log_button_class(n_clicks):
         return 'toggle-button toggle-on'
 
 
-@app.callback(
+@ app.callback(
     ddep.Output('bollinger-button', 'className'),
     ddep.Input('bollinger-button', 'n_clicks')
 )
@@ -417,14 +418,16 @@ def update_bollinger_button_class(n_clicks):
         return 'toggle-button toggle-on'
 
 
-@app.callback(
+@ app.callback(
     [ddep.Output('dd-output-graph', 'children'),
      ddep.Output('table-daystocks', 'children'),
      ddep.Output('table-daystocks', 'value'),
      ddep.Output('title-table-daystocks', 'style'),
      ddep.Output('resume-text', 'style'),
      ddep.Output('tabs-summary', 'children'),
-     ddep.Output('tabs-summary', 'value'),],
+     ddep.Output('tabs-summary', 'value'),
+     ddep.Output('toolbar', 'style'),
+     ddep.Output('graph', 'style')],
 
 
     [ddep.Input('companyName', 'value'),
@@ -465,6 +468,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             {'display': 'none'},
             [],
             None,
+            {'display': 'none'},
+            {'display': 'block'}
         )
 
     # Function to generate SQL query based on time period
@@ -715,14 +720,14 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="trending_down"),
+                           children="vital_signs"),
                     dcc.Markdown("Average"),
                     html.Div(id="low_last_day",
                             children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="trending_up"),
+                           children="align_space_around"),
                     dcc.Markdown("Standard deviation"),
                     html.Div(id="high_last_day",
                             children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
@@ -985,6 +990,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         {'display': 'block'},
         tabs_summary,
         values[-1].split(" • ")[1],
+        {'display': 'flex'},
+        {'display': 'block'}
     )
 
 
