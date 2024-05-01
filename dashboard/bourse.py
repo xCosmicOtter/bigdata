@@ -178,6 +178,7 @@ app.layout = html.Div(
                                             className='calendar',
                                             children=[
                                                 dcc.DatePickerRange(
+                                                    id="calendar-picker",
                                                     month_format='DD/MM/YYYY',
                                                     end_date_placeholder_text='JJ/MM/AAAA',
                                                     start_date_placeholder_text='JJ/MM/AAAA',
@@ -248,7 +249,7 @@ app.layout = html.Div(
                         html.Div(
                             className='historical-text',
                             children=[
-                            dcc.Markdown("""Value Repartition"""),
+                                dcc.Markdown("""Value Repartition"""),
                             ]
                         ),
                         html.Div(
@@ -434,10 +435,12 @@ def update_bollinger_button_class(n_clicks):
      ddep.Input('graph-type-dropdown', 'value'),
      ddep.Input('tabs-day', 'value'),
      ddep.Input('log-button', 'className'),
-     ddep.Input('bollinger-button', 'className')]
+     ddep.Input('bollinger-button', 'className'),
+     ddep.Input('calendar-picker', 'start_date'),
+     ddep.Input('calendar-picker', 'end_date')]
 )
 def display_graph_and_tabs(values: list, graphType: str, time_period: str, class_name_log: str,
-                           class_name_bollinger: str):
+                           class_name_bollinger: str, start: str, end: str):
     """
     Callback function to display graphs and tabs based on selected inputs.
 
@@ -569,7 +572,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         if is_daystocks:
             daystocks_df = combined_df.copy()
         else:
-            daystocks_df = pd.concat(selected_companies_5J_df, keys=selected_companies)
+            daystocks_df = pd.concat(
+                selected_companies_5J_df, keys=selected_companies)
 
         return selected_companies, combined_df, daystocks_df, is_daystocks
 
@@ -592,8 +596,10 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             column_available = df.columns if not df.empty else []
             last_data_point = df.iloc[::-1] if not df.empty else df
 
-            tab_content = generate_tab_content(symbol, column_available, last_data_point)
-            tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
+            tab_content = generate_tab_content(
+                symbol, column_available, last_data_point)
+            tabs.append(dcc.Tab(label=symbol, value=symbol,
+                        children=[tab_content]))
 
             values = extract_summary_data(df)
             tab_summary_content = generate_summary_tab_content(values)
@@ -654,13 +660,13 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 
     def generate_summary_tab_content(values: tuple):
         last_date, \
-        volume_last_day, \
-        high_last_day, \
-        low_last_day, \
-        close_last_day, \
-        open_last_day, \
-        mean_last_day, \
-        std_last_day = values
+            volume_last_day, \
+            high_last_day, \
+            low_last_day, \
+            close_last_day, \
+            open_last_day, \
+            mean_last_day, \
+            std_last_day = values
 
         """
         Generate summary tab content.
@@ -675,46 +681,46 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                         children="calendar_month"),
                     dcc.Markdown("Date"),
                     html.Div(id="last-date",
-                            children=dcc.Markdown(f"{last_date}"))
+                             children=dcc.Markdown(f"{last_date}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="monitoring"),
+                           children="monitoring"),
                     dcc.Markdown("Volume"),
                     html.Div(id="volume_last_day",
-                            children=dcc.Markdown(f"{volume_last_day}"))
+                             children=dcc.Markdown(f"{volume_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="event_available"),
+                           children="event_available"),
                     dcc.Markdown("Open"),
                     html.Div(id="open_last_day",
-                            children=dcc.Markdown(f"{open_last_day}"))
+                             children=dcc.Markdown(f"{open_last_day}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="event_busy"),
+                           children="event_busy"),
                     dcc.Markdown("Close"),
                     html.Div(id="close_last_day",
-                            children=dcc.Markdown(f"{close_last_day}"))
+                             children=dcc.Markdown(f"{close_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="trending_down"),
+                           children="trending_down"),
                     dcc.Markdown("Low"),
                     html.Div(id="low_last_day",
-                            children=dcc.Markdown(f"{low_last_day}"))
+                             children=dcc.Markdown(f"{low_last_day}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                        children="trending_up"),
+                           children="trending_up"),
                     dcc.Markdown("High"),
                     html.Div(id="high_last_day",
-                            children=dcc.Markdown(f"{high_last_day}"))
+                             children=dcc.Markdown(f"{high_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
@@ -723,19 +729,20 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                            children="vital_signs"),
                     dcc.Markdown("Average"),
                     html.Div(id="low_last_day",
-                            children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
+                             children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
                            children="align_space_around"),
                     dcc.Markdown("Standard deviation"),
                     html.Div(id="high_last_day",
-                            children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
+                             children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
                 ])
             ])
         ])
 
-    selected_companies, combined_df, daystocks_df, is_daystocks = process_data(values, time_period, time_period != '5J')
+    selected_companies, combined_df, daystocks_df, is_daystocks = process_data(
+        values, time_period, time_period != '5J')
     tabs, tabs_summary = generate_tabs(selected_companies, daystocks_df)
 
     def compute_bollinger(fig, df, line_color, is_daystocks):
@@ -828,8 +835,10 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             compute_bollinger(fig, df, color_list[idx], is_daystocks)
 
     elif (graphType == 'candlestick'):
-        increasing_colors = ['green', 'cyan', 'blue', 'orange', 'purple', 'yellow']
-        decreasing_colors = ['darkred', 'gray', 'red', 'darkgreen', 'darkorange', 'darkblue']
+        increasing_colors = ['green', 'cyan',
+                             'blue', 'orange', 'purple', 'yellow']
+        decreasing_colors = ['darkred', 'gray', 'red',
+                             'darkgreen', 'darkorange', 'darkblue']
 
         for idx, symbol in enumerate(selected_companies):
             if symbol not in daystocks_df.index:
@@ -991,7 +1000,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         tabs_summary,
         values[-1].split(" • ")[1],
         {'display': 'flex'},
-        {'display': 'block'}
+        {'display': 'block'},
     )
 
 
@@ -1008,8 +1017,10 @@ def update_search_bar_height(selected_items, input_repartition):
             html.P(
                 children=[
                     html.Span("NO DATA", className="no-data"),
-                    html.Span(" - ", style={'color': 'white', 'font-size': '20px'}),
-                    html.Span("PLEASE SELECT A COMPANY", className="no-company")
+                    html.Span(
+                        " - ", style={'color': 'white', 'font-size': '20px'}),
+                    html.Span("PLEASE SELECT A COMPANY",
+                              className="no-company")
                 ]
             ),
             dcc.Markdown('''32'''),
@@ -1026,7 +1037,7 @@ def update_search_bar_height(selected_items, input_repartition):
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 ORDER BY date desc limit 1"""
         current_df = pd.read_sql_query(query, engine)
-        current_df['name'] =  companie.split(" • ")[0]
+        current_df['name'] = companie.split(" • ")[0]
         last_values.append(current_df)
 
         selected_options.append(
@@ -1048,7 +1059,6 @@ def update_search_bar_height(selected_items, input_repartition):
         plot_bgcolor='#131312')
     # Create input
     return dcc.Graph(figure=fig), selected_options, dcc.Markdown(f'''{input_repartition}''')
-
 
 
 @app.callback(ddep.Output('query-result', 'children'),

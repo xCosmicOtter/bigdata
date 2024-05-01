@@ -677,7 +677,7 @@ input[type="radio"] {
   display: flex;
   flex-direction: row;
   justify-content: start;
-  flex: 1.5;
+  flex: 1.5 0 auto;
 }
 
 .toolbar-right{
@@ -685,8 +685,7 @@ input[type="radio"] {
   display: flex;
   flex-direction: row;
   justify-content: end;
-  flex: 1;
-  height: 69px;
+  flex: 1 0 auto;
 }
 
 .toolbar {
