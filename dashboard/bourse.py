@@ -433,7 +433,21 @@ def update_bollinger_button_class(n_clicks):
      ddep.Input('log-button', 'className'),
      ddep.Input('bollinger-button', 'className')]
 )
-def display_graph_and_tabs(values, graphType, time_period, class_name_log, class_name_bollinger):
+def display_graph_and_tabs(values: list, graphType: str, time_period: str, class_name_log: str,
+                           class_name_bollinger: str):
+    """
+    Callback function to display graphs and tabs based on selected inputs.
+
+    Args:
+        values (list): List of selected company names.
+        graphType (str): Type of graph selected.
+        time_period (str): Selected time period.
+        class_name_log (str): Class name of the log button.
+        class_name_bollinger (str): Class name of the Bollinger button.
+
+    Returns:
+        tuple: Tuple containing output elements for the Dash app.
+    """
     if not values:
         return (
             html.P(
@@ -453,7 +467,18 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             None,
         )
 
-    def generate_query(symbol, time_period):
+    # Function to generate SQL query based on time period
+    def generate_query(symbol: str, time_period: str):
+        """
+        Generate SQL query based on the symbol and time period.
+
+        Args:
+            symbol (str): Company symbol.
+            time_period (str): Time period.
+
+        Returns:
+            tuple: SQL query and flag indicating if it's day stocks.
+        """
         last_day_2023 = datetime(2023, 12, 31)
 
         if time_period == '5J':
@@ -478,7 +503,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
                 ORDER BY date"""
-            return query, False
+            return query
         else:
             query = f"""
                 SELECT date, open, high, low, close, volume, average, standard_deviation
@@ -486,8 +511,9 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
                 ORDER BY date"""
-            return query, True
+            return query
 
+    # Function to decrease brightness of a color
     def decrease_brightness(color, factor):
         """Diminue la clarté d'une couleur donnée par un certain facteur."""
         r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
@@ -496,38 +522,100 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         b = max(0, min(255, int(b * factor)))
         return '#{0:02x}{1:02x}{2:02x}'.format(r, g, b)
 
-    selected_companies = []
-    selected_companies_df = []
-    combined_df = pd.DataFrame()
+    # Initialize variables
+    def process_data(values: list, time_period: str, is_daystocks: bool):
+        """
+        Process data for selected companies.
 
-    tabs = []
-    is_daystocks = True
-    tabs_summary = []
+        Returns:
+            tuple: Selected companies, their dataframes, and combined dataframe.
+        """
+        selected_companies = []
+        selected_companies_df = []
+        selected_companies_5J_df = []
+        columns = ['date', 'open', 'close', 'low', 'high',
+                   'average', 'standard_deviation', 'volume']
 
-    for value in values:
-        symbol = value.split(" • ")[1]
-        query, is_daystocks = generate_query(symbol, time_period)
-        company_df = pd.read_sql_query(query, engine)
+        for value in values:
+            symbol = value.split(" • ")[1]
+            query = generate_query(symbol, time_period)
+            company_df = pd.read_sql_query(query, engine)
 
-        if not is_daystocks:
-            company_df['close'] = company_df['high'] = company_df['low'] = company_df['open'] = company_df['value']
+            selected_companies.append(symbol)
+            selected_companies_df.append(company_df)
 
-        selected_companies.append(symbol)
-        selected_companies_df.append(company_df)
+            if is_daystocks:
+                continue
 
-    combined_df = pd.concat(selected_companies_df, keys=selected_companies)
+            if company_df.empty:
+                selected_companies_5J_df.append(pd.DataFrame(columns=columns))
+                continue
 
-    for symbol in selected_companies:
-        df = combined_df.loc[symbol]
+            day_df = company_df.set_index('date')
+            day_df = day_df.groupby(pd.Grouper(freq='D')).agg({
+                'value': ['first', 'last', "min", "max", "mean", "std"],
+                'volume': "last",
+            }).reset_index()
 
-        # Create tab content for each value
-        tab_content = dash_table.DataTable(
+            day_df.columns = columns
+            selected_companies_5J_df.append(day_df)
+
+        combined_df = pd.concat(selected_companies_df, keys=selected_companies)
+        if is_daystocks:
+            daystocks_df = combined_df.copy()
+        else:
+            daystocks_df = pd.concat(selected_companies_5J_df, keys=selected_companies)
+
+        return selected_companies, combined_df, daystocks_df, is_daystocks
+
+    def generate_tabs(selected_companies, daystocks_df):
+        """
+        Generate tabs and summary tabs based on selected companies and their data.
+
+        Returns:
+            tuple: Tabs and summary tabs.
+        """
+        tabs = []
+        tabs_summary = []
+
+        for symbol in selected_companies:
+            if symbol in daystocks_df.index:
+                df = daystocks_df.loc[symbol]
+            else:
+                df = pd.DataFrame()
+
+            column_available = df.columns if not df.empty else []
+            last_data_point = df.iloc[::-1] if not df.empty else df
+
+            tab_content = generate_tab_content(symbol, column_available, last_data_point)
+            tabs.append(dcc.Tab(label=symbol, value=symbol, children=[tab_content]))
+
+            values = extract_summary_data(df)
+            tab_summary_content = generate_summary_tab_content(values)
+            tabs_summary.append(
+                dcc.Tab(
+                    label=symbol,
+                    value=symbol,
+                    children=[tab_summary_content]
+                )
+            )
+
+        return tabs, tabs_summary
+
+    def generate_tab_content(symbol: str, column_available: list, last_data_point):
+        """
+        Generate tab content for each selected company.
+
+        Returns:
+            Dash component: Tab content.
+        """
+        return dash_table.DataTable(
             id={
                 'type': 'dynamic-table',
                 'index': symbol
             },
-            data=df.iloc[::-1].to_dict('records'),
-            columns=[{'id': c, 'name': c} for c in df.columns],
+            data=last_data_point.to_dict('records'),
+            columns=[{'id': c, 'name': c} for c in column_available],
             page_size=15,
             style_header={
                 'backgroundColor': "#131312",
@@ -540,106 +628,121 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                 'color': 'rgba(255, 255, 255, 0.7)'
             }
         )
-        tabs.append(dcc.Tab(label=symbol, value=symbol,
-                    children=[tab_content]))
 
+    def extract_summary_data(df: pd.DataFrame):
+        """
+        Extract summary data for a dataframe.
+
+        Returns:
+            tuple: Summary data.
+        """
         last_date = df['date'].iloc[-1].date() if not df.empty else ''
         volume_last_day = df['volume'].iloc[-1] if not df.empty else ''
+        high_last_day = df['high'].iloc[-1] if not df.empty else ''
+        low_last_day = df['low'].iloc[-1] if not df.empty else ''
+        close_last_day = df['close'].iloc[-1] if not df.empty else ''
+        open_last_day = df['open'].iloc[-1] if not df.empty else ''
+        mean_last_day = df['average'].iloc[-1] if not df.empty else ''
+        std_last_day = df['standard_deviation'].iloc[-1] if not df.empty else ''
 
-        if is_daystocks:
-            high_last_day = df['high'].iloc[-1] if not df.empty else ''
-            low_last_day = df['low'].iloc[-1] if not df.empty else ''
-            close_last_day = df['close'].iloc[-1] if not df.empty else ''
-            open_last_day = df['open'].iloc[-1] if not df.empty else ''
-            mean_last_day = df['average'].iloc[-1] if not df.empty else ''
-            std_last_day = df['standard_deviation'].iloc[-1] if not df.empty else ''
-        else:
-            high_last_day = low_last_day = close_last_day = open_last_day = ''
-            mean_last_day = df['high'].mean() if not df.empty else ''
-            std_last_day = df['high'].std() if not df.empty else ''
+        return last_date, volume_last_day, high_last_day, low_last_day, close_last_day, open_last_day, mean_last_day, std_last_day
 
-        tab_summary_content = html.Div([
+    def generate_summary_tab_content(values: tuple):
+        last_date, \
+        volume_last_day, \
+        high_last_day, \
+        low_last_day, \
+        close_last_day, \
+        open_last_day, \
+        mean_last_day, \
+        std_last_day = values
+
+        """
+        Generate summary tab content.
+
+        Returns:
+            Dash component: Summary tab content.
+        """
+        return html.Div([
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="calendar_month"),
+                        children="calendar_month"),
                     dcc.Markdown("Date"),
                     html.Div(id="last-date",
-                             children=dcc.Markdown(f"{last_date}"))
+                            children=dcc.Markdown(f"{last_date}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="monitoring"),
+                        children="monitoring"),
                     dcc.Markdown("Volume"),
                     html.Div(id="volume_last_day",
-                             children=dcc.Markdown(f"{volume_last_day}"))
+                            children=dcc.Markdown(f"{volume_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="event_available"),
+                        children="event_available"),
                     dcc.Markdown("Open"),
                     html.Div(id="open_last_day",
-                             children=dcc.Markdown(f"{open_last_day}"))
+                            children=dcc.Markdown(f"{open_last_day}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="event_busy"),
+                        children="event_busy"),
                     dcc.Markdown("Close"),
                     html.Div(id="close_last_day",
-                             children=dcc.Markdown(f"{close_last_day}"))
+                            children=dcc.Markdown(f"{close_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="trending_down"),
+                        children="trending_down"),
                     dcc.Markdown("Low"),
                     html.Div(id="low_last_day",
-                             children=dcc.Markdown(f"{low_last_day}"))
+                            children=dcc.Markdown(f"{low_last_day}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="trending_up"),
+                        children="trending_up"),
                     dcc.Markdown("High"),
                     html.Div(id="high_last_day",
-                             children=dcc.Markdown(f"{high_last_day}"))
+                            children=dcc.Markdown(f"{high_last_day}"))
                 ])
             ]),
             html.Div(className="resume-box", children=[
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="trending_down"),
+                        children="trending_down"),
                     dcc.Markdown("Average"),
                     html.Div(id="low_last_day",
-                             children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
+                            children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
-                           children="trending_up"),
+                        children="trending_up"),
                     dcc.Markdown("Standard deviation"),
                     html.Div(id="high_last_day",
-                             children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
+                            children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
                 ])
             ])
         ])
-        tabs_summary.append(
-            dcc.Tab(
-                label=symbol,
-                value=symbol,
-                children=[tab_summary_content]
-            )
-        )
 
-    def compute_bollinger(fig, df, line_color):
+    selected_companies, combined_df, daystocks_df, is_daystocks = process_data(values, time_period, time_period != '5J')
+    tabs, tabs_summary = generate_tabs(selected_companies, daystocks_df)
+
+    def compute_bollinger(fig, df, line_color, is_daystocks):
         if 'toggle-off' in class_name_bollinger:
             return
+
+        key = ('close' if is_daystocks else 'value')
         light_line_color = decrease_brightness(line_color, 0.65)
 
         # Moyennes et écarts-types mobiles sur une fenetre de 20 jours
-        rolling_mean = df['close'].rolling(window=20).mean()
-        rolling_std = df['close'].rolling(window=20).std()
+        rolling_mean = df[key].rolling(window=20).mean()
+        rolling_std = df[key].rolling(window=20).std()
 
         # Calcul des bandes de Bollinger supérieure et inférieure
         upper_band = rolling_mean + (rolling_std * 2)
@@ -650,7 +753,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=lower_band,  # .shift(10)
+                y=lower_band,
                 mode='lines',
                 line=dict(color=light_line_color, dash='dot'),
                 name='Lower Bollinger Band',
@@ -662,7 +765,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.add_trace(
             go.Scatter(
                 x=df['date'],
-                y=upper_band,  # .shift(10)
+                y=upper_band,
                 mode='lines',
                 line=dict(color=light_line_color, dash='dot'),
                 name='Higher Bollinger Band',
@@ -681,7 +784,7 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
             rows=2,
             shared_xaxes=True,
             subplot_titles=(None, None),
-            vertical_spacing=0.01,
+            vertical_spacing=0.035,
             row_heights=[0.8, 0.2]
         )
     else:
@@ -694,29 +797,55 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                   '#D486F1', '#F1E386', '#F186C3']
     if (graphType == 'line'):
         for idx, symbol in enumerate(selected_companies):
+            # If dataframe is empty, add an empty trace to the figure
+            if symbol not in combined_df.index:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[],
+                        y=[],
+                        mode='lines',
+                        name=symbol,
+                        line=dict(color=color_list[idx])
+                    ),
+                    row=1, col=1)
+                continue
+
             df = combined_df.loc[symbol]
-            line_color = color_list[idx]
             fig.add_trace(
                 go.Scatter(
                     x=df['date'],
-                    y=df['close'],
+                    y=df['close' if is_daystocks else 'value'],
                     mode='lines',
                     name=symbol,
-                    line=dict(color=line_color)
+                    line=dict(color=color_list[idx])
                 ),
                 row=1, col=1)
-            compute_bollinger(fig, df, line_color)
+            compute_bollinger(fig, df, color_list[idx], is_daystocks)
 
     elif (graphType == 'candlestick'):
-        increasing_colors = ['green', 'cyan',
-                             'blue', 'orange', 'purple', 'yellow']
-        decreasing_colors = ['darkred', 'gray', 'red',
-                             'darkgreen', 'darkorange', 'darkblue']
+        increasing_colors = ['green', 'cyan', 'blue', 'orange', 'purple', 'yellow']
+        decreasing_colors = ['darkred', 'gray', 'red', 'darkgreen', 'darkorange', 'darkblue']
 
         for idx, symbol in enumerate(selected_companies):
+            if symbol not in daystocks_df.index:
+                fig.add_trace(
+                    go.Candlestick(
+                        x=[],
+                        open=[],
+                        high=[],
+                        low=[],
+                        close=[],
+                        name=symbol,
+                        increasing_line_color=increasing_colors[idx],
+                        decreasing_line_color=decreasing_colors[idx],
+                    ),
+                    row=1, col=1)
+                continue
+
             # Ajout des données Candlesticks
-            df = combined_df.loc[symbol]
-            line_color = color_list[idx]
+            df = daystocks_df.loc[symbol].copy()
+            df['date'] = df['date'] + timedelta(hours=12)
+
             fig.add_trace(
                 go.Candlestick(
                     x=df['date'],
@@ -729,28 +858,40 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
                     decreasing_line_color=decreasing_colors[idx],
                 ),
                 row=1, col=1)
-            compute_bollinger(fig, df, line_color)
+
+            df['value'] = df['close']
+            compute_bollinger(fig, df, color_list[idx], is_daystocks)
 
         fig.update_layout(xaxis_rangeslider_visible=False)
 
     elif (graphType == 'area'):
         for idx, symbol in enumerate(selected_companies):
+            if symbol not in combined_df.index:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[],
+                        y=[],
+                        mode='lines',
+                        name=symbol,
+                        line=dict(color=color_list[idx])
+                    ),
+                    row=1, col=1)
+                continue
+
             # Ajout des données Area
             df = combined_df.loc[symbol]
-            line_color = color_list[idx]
             fig.add_trace(
                 go.Scatter(
                     x=df['date'],
-                    y=df['close'],
+                    y=df['close' if is_daystocks else 'value'],
                     mode='lines',
                     fill='tozeroy',
                     name=symbol,
-                    line=dict(color=line_color)
+                    line=dict(color=color_list[idx])
                 ),
                 row=1, col=1)
 
     # Ajout des titres et étiquettes des axes
-    fig.update_xaxes(title_text="Date", row=2, col=1)
     fig.update_yaxes(title_text="Stock Prices",
                      row=1, col=1, title_standoff=20, rangemode="tozero")
 
@@ -763,15 +904,26 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
 
     # Ajout des données Volume avec un graphique à barres
     if graph_dimension == 1:
-        fig.add_trace(
-            go.Bar(
-                x=df['date'],
-                y=df['volume'],
-                name='Volume',
-                marker_color=line_color
-            ),
-            row=2, col=1
-        )
+        if symbol not in daystocks_df.index:
+            fig.add_trace(
+                go.Bar(
+                    x=[],
+                    y=[],
+                    name='Volume',
+                    marker_color='#F1C086'
+                ),
+                row=2, col=1
+            )
+        else:
+            fig.add_trace(
+                go.Bar(
+                    x=daystocks_df['date'],
+                    y=daystocks_df['volume'],
+                    name='Volume',
+                    marker_color='#F1C086'
+                ),
+                row=2, col=1
+            )
 
     # Mise à jour des ticks des axes x pour les afficher à l'extérieur et espacement cohérent
     if graph_dimension == 1:
@@ -787,18 +939,26 @@ def display_graph_and_tabs(values, graphType, time_period, class_name_log, class
         fig.update_xaxes(
             row=1, col=1,
             rangebreaks=[
-                dict(bounds=["sat", "sun"]),
+                dict(bounds=["sat", "mon"]),
                 # dict(bounds=[18, 9], pattern="hour")
             ]
         )
     else:
-        fig.update_xaxes(
-            row=1, col=1,
-            rangebreaks=[
-                dict(bounds=["sat", "sun"]),
-                dict(bounds=[18, 9], pattern="hour")
-            ]
-        )
+        if graphType != 'candlestick':
+            fig.update_xaxes(
+                row=1, col=1,
+                rangebreaks=[
+                    dict(bounds=["sat", "mon"]),
+                    dict(bounds=[18, 9], pattern="hour")
+                ]
+            )
+        else:
+            fig.update_xaxes(
+                row=1, col=1,
+                rangebreaks=[
+                    dict(bounds=["sat", "mon"])
+                ]
+            )
 
     # Ajout d'un titre général au graphique
     fig.update_layout(
