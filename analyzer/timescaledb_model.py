@@ -13,7 +13,7 @@ import mylogging
 class TimescaleStockMarketModel:
     """ Bourse model with TimeScaleDB persistence."""
 
-    def __init__(self, database, user=None, host=None, password=None, port=None):
+    def __init__(self, database, user=None, host=None, password=None, port=None, is_sub=False):
         """Create a TimescaleStockMarketModel
 
         database -- The name of the persistence database.
@@ -21,8 +21,10 @@ class TimescaleStockMarketModel:
                     database name by default.
 
         """
-
-        self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log")
+        if is_sub:
+            self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log", init_verbose=False)
+        else:
+            self.logger = mylogging.getLogger(__name__, filename="/tmp/bourse.log")
 
         self.__database = database
         self.__user = user or database
@@ -39,8 +41,9 @@ class TimescaleStockMarketModel:
         self.__boursorama_cid = {}  # cid from netfonds symbol
         self.__market_id = {}  # id of markets from aliases
 
-        self.logger.info("Setup database generates an error if it exists already, it's ok")
-        self._setup_database()
+        if not is_sub:
+            self.logger.info("Setup database generates an error if it exists already, it's ok")
+            self._setup_database()
 
 
     def _setup_database(self):
@@ -94,6 +97,8 @@ class TimescaleStockMarketModel:
                   close FLOAT4,
                   high FLOAT4,
                   low FLOAT4,
+                  average FLOAT4,
+                  standard_deviation FLOAT4,
                   volume INT
                 );''')
             cursor.execute('''SELECT create_hypertable('daystocks', by_range('date'));''')
@@ -172,7 +177,7 @@ class TimescaleStockMarketModel:
         cursor.execute(query, args)
         return cursor.fetchall()
 
-    def df_query(self, query, args=None, index_col=None, coerce_float=True, params=None, 
+    def df_query(self, query, args=None, index_col=None, coerce_float=True, params=None,
                  parse_dates=None, columns=None, chunksize=1000, dtype=None):
         '''Returns a Pandas dataframe from a Postgres SQL query
 
@@ -184,8 +189,8 @@ class TimescaleStockMarketModel:
         if args is not None:
             query = query % args
         self.logger.debug('df_query: %s' % query)
-        return pd.read_sql(query, self.__engine, index_col=index_col, coerce_float=coerce_float, 
-                           params=params, parse_dates=parse_dates, columns=columns, 
+        return pd.read_sql(query, self.__engine, index_col=index_col, coerce_float=coerce_float,
+                           params=params, parse_dates=parse_dates, columns=columns,
                            chunksize=chunksize, dtype=dtype)
 
     # system methods
@@ -234,11 +239,11 @@ class TimescaleStockMarketModel:
         else:
             return 0
 
-    def is_file_done(name):
+    def is_file_done(self, name):
         '''
         Check if a file has already been included in the DB
         '''
-        return  self.raw_query("SELECT EXISTS ( SELECT 1 FROM file_done WHERE nom = '%s' );" % name)
+        return  self.raw_query("SELECT EXISTS ( SELECT 1 FROM file_done WHERE name = '%s' );" % name)[0][0]
 
 
 #
