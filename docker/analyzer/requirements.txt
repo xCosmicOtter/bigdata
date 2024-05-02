@@ -4,4 +4,3 @@ sqlalchemy-timescaledb
 numpy
 pandas
 scikit-learn
-logzero
