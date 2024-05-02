@@ -484,7 +484,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start}' and date <= '{end}'
                 ORDER BY date"""
-            return query
+            return query, start, end
         else:
             query = f"""
                 SELECT date, open, high, low, close, volume, average, standard_deviation
@@ -492,7 +492,25 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start}' and date <= '{end}'
                 ORDER BY date"""
-            return query
+            return query, start, end
+
+
+    def get_period_first_day(last_day_2023: datetime) -> datetime:
+        if time_period == '5J':
+            return last_day_2023 - timedelta(weeks=1)
+        elif time_period == '1M':
+            return last_day_2023 - timedelta(days=30)
+        elif time_period == '3M':
+            return last_day_2023 - timedelta(days=90)
+        elif time_period == '1A':
+            return last_day_2023 - timedelta(days=365)
+        elif time_period == '2A':
+            return last_day_2023 - timedelta(days=365*2)
+        elif time_period == '5A':
+            return last_day_2023 - timedelta(days=365*5)
+        else:
+            raise ValueError("Invalid time period")
+
 
     # Function to generate SQL query based on time period
     def generate_query(symbol: str, time_period: str, start: str = None, end: str = None, is_few_weeks: bool = False):
@@ -511,21 +529,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             return generate_range_query(symbol, start, end, is_few_weeks)
 
         last_day_2023 = datetime(2023, 12, 31)
-
-        if time_period == '5J':
-            start_date = last_day_2023 - timedelta(weeks=1)
-        elif time_period == '1M':
-            start_date = last_day_2023 - timedelta(days=30)
-        elif time_period == '3M':
-            start_date = last_day_2023 - timedelta(days=90)
-        elif time_period == '1A':
-            start_date = last_day_2023 - timedelta(days=365)
-        elif time_period == '2A':
-            start_date = last_day_2023 - timedelta(days=365*2)
-        elif time_period == '5A':
-            start_date = last_day_2023 - timedelta(days=365*5)
-        else:
-            raise ValueError("Invalid time period")
+        start_date = get_period_first_day(last_day_2023)
 
         if time_period == '5J':
             query = f"""
@@ -534,7 +538,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
                 ORDER BY date"""
-            return query
+            return query, start_date, last_day_2023
         else:
             query = f"""
                 SELECT date, open, high, low, close, volume, average, standard_deviation
@@ -542,7 +546,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 AND date >= '{start_date.strftime('%Y-%m-%d')}'
                 ORDER BY date"""
-            return query
+            return query, start_date, last_day_2023
 
     # Function to decrease brightness of a color
     def decrease_brightness(color, factor):
@@ -570,6 +574,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         begining_period = datetime.strptime(start, "%Y-%m-%d") if start else None
         ending_period = datetime.strptime(end, "%Y-%m-%d") if end else None
 
+        min_hour, max_hour = 18, 9
+        #min_day, max_day = datetime(2023, 12, 31).date(), datetime(2019, 1, 1).date()
         if not(start is None or end is None):
             period = ending_period - begining_period
             is_daystocks = period.days >= 30
@@ -578,8 +584,11 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 
         for value in values:
             symbol = value.split(" • ")[1]
-            query = generate_query(symbol, time_period, begining_period, ending_period, not is_daystocks)
+            query, starting_date, ending_date = generate_query(symbol, time_period, begining_period, ending_period, not is_daystocks)
             company_df = pd.read_sql_query(query, engine)
+
+            #min_day = min(starting_date.date(), company_df['date'].dt.date.min())
+            #max_day = max(ending_date.date(), company_df['date'].dt.date.max())
 
             selected_companies.append(symbol)
             selected_companies_df.append(company_df)
@@ -590,6 +599,9 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             if company_df.empty:
                 selected_companies_5J_df.append(pd.DataFrame(columns=columns))
                 continue
+
+            min_hour = min(min_hour, company_df['date'].dt.hour.min())
+            max_hour = max(max_hour, company_df['date'].dt.hour.max() + 1)
 
             day_df = company_df.groupby(company_df['date'].dt.date).agg({
                 'value': ['first', 'last', "min", "max", "mean", "std"],
@@ -607,7 +619,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             daystocks_df = pd.concat(
                 selected_companies_5J_df, keys=selected_companies)
 
-        return selected_companies, combined_df, daystocks_df, is_daystocks
+        return selected_companies, combined_df, daystocks_df, is_daystocks, min_hour, max_hour#, min_day, max_day
 
     def generate_tabs(selected_companies, daystocks_df):
         """
@@ -773,7 +785,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             ])
         ])
 
-    selected_companies, combined_df, daystocks_df, is_daystocks = process_data(
+    selected_companies, combined_df, daystocks_df, \
+    is_daystocks, min_hour, max_hour = process_data(
         values, time_period, start, end)
     tabs, tabs_summary = generate_tabs(selected_companies, daystocks_df)
 
@@ -995,7 +1008,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 row=1, col=1,
                 rangebreaks=[
                     dict(bounds=["sat", "mon"]),
-                    dict(bounds=[18, 9], pattern="hour")
+                    dict(bounds=[max_hour, min_hour], pattern="hour")
                 ]
             )
         else:
