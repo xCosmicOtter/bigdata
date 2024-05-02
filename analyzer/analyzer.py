@@ -30,6 +30,17 @@ def clean_values_volumes(df: pd.DataFrame) -> None:
     df.loc[overflow_mask, 'volume'] = np.iinfo(np.int32).max
 
 
+def custom_sort_key(file_path: str) -> str:
+    return file_path[-22:-4]
+
+
+def count_files(directory: str) -> int:
+    file_count = 0
+    for _, _, files in os.walk(directory):
+        file_count += len(files)
+    return file_count
+
+
 """
 def replace_errors(group: pd.DataFrame) -> pd.DataFrame:
     # First, Third Quantile and Inter Quantile
@@ -57,10 +68,6 @@ def replace_errors(group: pd.DataFrame) -> pd.DataFrame:
 """
 
 
-def custom_sort_key(file_path: str) -> str:
-    return file_path[-22:-4]
-
-
 # ---- SQL requests functions ---- #
 def get_market_id(market_name: str) -> int:
     get_id = db.raw_query(
@@ -70,6 +77,15 @@ def get_market_id(market_name: str) -> int:
 
 def get_companies_id() -> pd.DataFrame:
     return db.df_query('SELECT id, symbol FROM companies', chunksize=None)
+
+
+def get_files_done_count() -> int:
+    query = """
+            SELECT COUNT(DISTINCT name) AS num_elements
+            FROM file_done;
+            """
+    get_id = db.raw_query(query)
+    return int(get_id[0][0]) if len(get_id) != 0 else None
 
 
 # ---- SQL requests functions ---- #
@@ -261,8 +277,8 @@ def main() -> None:
     for stock in os.listdir(data_path):
         stock_path = f"{data_path}/{stock}"
 
-        starting_year_time = time.time()
         for year in sorted(os.listdir(stock_path), reverse=True):
+            starting_year_time = time.time()
             market_pattern = f"{data_path}/{stock}/{year}/*"
 
             available_files = glob(market_pattern)
@@ -306,5 +322,14 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
-    print('Done')
+    data_directory = os.path.join(os.getcwd(), "data")
+    files_processed = get_files_done_count()
+    files_to_process = count_files(data_directory)
+
+    if files_processed is None or files_processed == 0:
+        main()
+        print('Done.')
+    elif files_processed == files_to_process:
+        print(f'Already Done on {files_processed} files.')
+    else:
+        print(f'Files are missing: {files_to_process = } and {files_processed = }.')
