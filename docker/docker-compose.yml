@@ -16,17 +16,18 @@ services:
       - POSTGRES_USER=ricou
       - POSTGRES_PASSWORD=monmdp
     volumes:
-      - $PWD/timescaledb:/var/lib/postgresql/data/timescaledb
+      - $PWD/timescaledb5:/var/lib/postgresql/data/timescaledb
     healthcheck:
-        test: ["CMD-SHELL", "pg_isready bourse"]
-        interval: 6s
-        timeout: 3s
-        retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ricou -d bourse -h localhost"]
+      interval: 8s
+      timeout: 5s
+      retries: 10
 
   analyzer:
     image: my_analyzer
     depends_on:
-        - db
+      db:
+        condition: service_healthy
     networks:
       - boursenet
     volumes:
@@ -34,6 +35,9 @@ services:
 
   dashboard:
     image: my_dashboard
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - boursenet
     ports:
