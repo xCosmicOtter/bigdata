@@ -61,25 +61,13 @@ app.layout = html.Div(
                 # Div for Left Panel App Info
                 html.Div(
                     children=[
-                        html.Div(
-                            className="logo-text",
-                            children=[
-                                html.Img(
-                                    className="logo",
-                                    src=app.get_asset_url("analytics.png"),
-                                ),
-                                dcc.Markdown("""Analytics""")
-                            ]
-                        )
+                        html.Img(
+                            className="logo",
+                            src=app.get_asset_url("logo.png"),
+                        ),
                     ]
                 ),
 
-                html.Div(
-                    className="project-description",
-                    children=[
-                        dcc.Markdown("""Projet Python Big Data for EPITA."""),
-                    ]
-                ),
             ]
         ),
 
