@@ -332,4 +332,5 @@ if __name__ == '__main__':
     elif files_processed == files_to_process:
         print(f'Already Done on {files_processed} files.')
     else:
-        print(f'Files are missing: {files_to_process = } and {files_processed = }.')
+        print(f"Files are missing: {files_to_process = } and {files_processed = }.\n",
+               "-> If this is not normal, please delete the TimescaleDB database and relaunch the program.")
