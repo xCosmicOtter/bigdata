@@ -584,8 +584,27 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             {'display': 'block'}
         )
 
+    def generate_range_query(symbol: str, start: str, end: str, is_few_weeks: bool = False):
+        # Check if the total days is less than the days in one month
+        if is_few_weeks:
+            query = f"""
+                SELECT date, value, volume
+                FROM stocks
+                WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
+                AND date >= '{start}' and date <= '{end}'
+                ORDER BY date"""
+            return query
+        else:
+            query = f"""
+                SELECT date, open, high, low, close, volume, average, standard_deviation
+                FROM daystocks
+                WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
+                AND date >= '{start}' and date <= '{end}'
+                ORDER BY date"""
+            return query
+
     # Function to generate SQL query based on time period
-    def generate_query(symbol: str, time_period: str):
+    def generate_query(symbol: str, time_period: str, start: str = None, end: str = None, is_few_weeks: bool = False):
         """
         Generate SQL query based on the symbol and time period.
 
@@ -596,6 +615,10 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         Returns:
             tuple: SQL query and flag indicating if it's day stocks.
         """
+        is_calendar_available = not (start is None or end is None)
+        if is_calendar_available:
+            return generate_range_query(symbol, start, end, is_few_weeks)
+
         last_day_2023 = datetime(2023, 12, 31)
 
         if time_period == '5J':
@@ -640,7 +663,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         return '#{0:02x}{1:02x}{2:02x}'.format(r, g, b)
 
     # Initialize variables
-    def process_data(values: list, time_period: str, is_daystocks: bool):
+    def process_data(values: list, time_period: str, start: str, end: str):
         """
         Process data for selected companies.
 
@@ -653,9 +676,18 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         columns = ['date', 'open', 'close', 'low', 'high',
                    'average', 'standard_deviation', 'volume']
 
+        begining_period = datetime.strptime(start, "%Y-%m-%d") if start else None
+        ending_period = datetime.strptime(end, "%Y-%m-%d") if end else None
+
+        if not(start is None or end is None):
+            period = ending_period - begining_period
+            is_daystocks = period.days >= 30
+        else:
+            is_daystocks = time_period != '5J'
+
         for value in values:
             symbol = value.split(" • ")[1]
-            query = generate_query(symbol, time_period)
+            query = generate_query(symbol, time_period, begining_period, ending_period, not is_daystocks)
             company_df = pd.read_sql_query(query, engine)
 
             selected_companies.append(symbol)
@@ -851,7 +883,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         ])
 
     selected_companies, combined_df, daystocks_df, is_daystocks = process_data(
-        values, time_period, time_period != '5J')
+        values, time_period, start, end)
     tabs, tabs_summary = generate_tabs(selected_companies, daystocks_df)
 
     def compute_bollinger(fig, df, line_color, is_daystocks):
