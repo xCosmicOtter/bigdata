@@ -288,7 +288,7 @@ def main() -> None:
                 market_id = get_market_id(market_name)
                 for month, files_list in sorted(month_dict.items(), reverse=True):
                     files_count += len(files_list)
-                    print(f"# Loading {files_count} files for {stock}/{market_name} ({month}/{year}).")
+                    print(f"# Loading {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
 
                     store_file(files_list, stock, market_name, market_id)
 
