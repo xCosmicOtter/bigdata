@@ -310,17 +310,17 @@ app.layout = html.Div(
                 )
             ]
         ),
-        # dcc.Textarea(
-        #     id='sql-query',
-        #     value='''
-        #     SELECT * FROM pg_catalog.pg_tables
-        #         WHERE schemaname != 'pg_catalog' AND
-        #             schemaname != 'information_schema';
-        #     ''',
-        #     style={'width': '100%', 'height': 100},
-        # ),
-        # html.Button('Execute', id='execute-query', n_clicks=0),
-        # html.Div(id='query-result'),
+        dcc.Textarea(
+            id='sql-query',
+            value='''
+            SELECT * FROM pg_catalog.pg_tables
+                WHERE schemaname != 'pg_catalog' AND
+                    schemaname != 'information_schema';
+            ''',
+            style={'width': '100%', 'height': 100},
+        ),
+        html.Button('Execute', id='execute-query', n_clicks=0),
+        html.Div(id='query-result'),
     ]
 )
 
@@ -591,8 +591,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                 selected_companies_5J_df.append(pd.DataFrame(columns=columns))
                 continue
 
-            day_df = company_df.set_index('date')
-            day_df = day_df.groupby(pd.Grouper(freq='D')).agg({
+            day_df = company_df.groupby(company_df['date'].dt.date).agg({
                 'value': ['first', 'last', "min", "max", "mean", "std"],
                 'volume': "last",
             }).reset_index()
@@ -603,6 +602,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         combined_df = pd.concat(selected_companies_df, keys=selected_companies)
         if is_daystocks:
             daystocks_df = combined_df.copy()
+            daystocks_df['date'] = daystocks_df['date'].dt.date
         else:
             daystocks_df = pd.concat(
                 selected_companies_5J_df, keys=selected_companies)
@@ -679,7 +679,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         Returns:
             tuple: Summary data.
         """
-        last_date = df['date'].iloc[-1].date() if not df.empty else ''
+        last_date = df['date'].iloc[-1] if not df.empty else ''
         volume_last_day = df['volume'].iloc[-1] if not df.empty else ''
         high_last_day = df['high'].iloc[-1] if not df.empty else ''
         low_last_day = df['low'].iloc[-1] if not df.empty else ''
@@ -761,14 +761,14 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                            children="vital_signs"),
                     dcc.Markdown("Average"),
                     html.Div(id="low_last_day",
-                             children=dcc.Markdown(f"{round(mean_last_day or 0, 3)}"))
+                             children=dcc.Markdown(f"{mean_last_day}"))
                 ]),
                 html.Div(className="box", children=[
                     html.I(className="material-symbols-outlined",
                            children="align_space_around"),
                     dcc.Markdown("Standard deviation"),
                     html.Div(id="high_last_day",
-                             children=dcc.Markdown(f"{round(std_last_day or 0, 3)}"))
+                             children=dcc.Markdown(f"{std_last_day}"))
                 ])
             ])
         ])
@@ -890,7 +890,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 
             # Ajout des données Candlesticks
             df = daystocks_df.loc[symbol].copy()
-            df['date'] = df['date'] + timedelta(hours=12)
+            df['date'] = pd.to_datetime(df['date']) + timedelta(hours=12)
 
             fig.add_trace(
                 go.Candlestick(
