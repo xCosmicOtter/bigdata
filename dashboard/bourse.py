@@ -37,8 +37,27 @@ graph_options = [
 ]
 
 
+def getAllMarket():
+    query = '''select alias from markets;'''
+    df = pd.read_sql_query(query, engine)
+    return list(df['alias'])
+
+
 def getAllName():
     query = '''select name, symbol from companies;'''
+    df = pd.read_sql_query(query, engine)
+    name_symbol_tuple = list(zip(df['name'], df['symbol']))
+    list_name_symbol = [name + ' • ' +
+                        symbol for name, symbol in name_symbol_tuple]
+    return list_name_symbol
+
+
+def getAllNameFromMarket(mids):
+    str = []
+    for i in mids:
+        str.append(f' mid = {i} ')
+    whstr = "where " + "or".join(str) if len(str) != 0 else ""
+    query = f'''select name, symbol from companies {whstr};'''
     df = pd.read_sql_query(query, engine)
     name_symbol_tuple = list(zip(df['name'], df['symbol']))
     list_name_symbol = [name + ' • ' +
@@ -112,10 +131,42 @@ app.layout = html.Div(
                 ),
 
                 html.Br(),
-                dcc.Checklist(
-                    options=['CompA', 'CompB', 'PEAPME', 'AMSTERDAM'],
-                    inline=True
-                ),
+
+                html.Div(className="filter", children=[
+                    html.Div(className="filter-img", children=[
+                        html.I(
+                            className="material-symbols-outlined", id="filter-img", children="filter_alt")]
+                    ),
+                    html.Div(
+                        className='market-selector',
+                        children=[
+                            html.Button(
+                                children='compA',
+                                id='compA-button',
+                                className='toggle-button toggle-on',
+                                n_clicks=0
+                            ),
+                            html.Button(
+                                children='compB',
+                                id='compB-button',
+                                className='toggle-button toggle-on',
+                                n_clicks=0
+                            ),
+                            html.Button(
+                                children='PEA-PME',
+                                id='PEA-PME-button',
+                                className='toggle-button toggle-on',
+                                n_clicks=0
+                            ),
+                            html.Button(
+                                children='Amsterdam',
+                                id='amsterdam-button',
+                                className='toggle-button toggle-on',
+                                n_clicks=0
+                            ),
+                        ]
+                    ),]),
+
 
                 html.Br(),
                 html.Div(
@@ -310,17 +361,17 @@ app.layout = html.Div(
                 )
             ]
         ),
-        # dcc.Textarea(
-        #     id='sql-query',
-        #     value='''
-        #     SELECT * FROM pg_catalog.pg_tables
-        #         WHERE schemaname != 'pg_catalog' AND
-        #             schemaname != 'information_schema';
-        #     ''',
-        #     style={'width': '100%', 'height': 100},
-        # ),
-        # html.Button('Execute', id='execute-query', n_clicks=0),
-        # html.Div(id='query-result'),
+        dcc.Textarea(
+            id='sql-query',
+            value='''
+            SELECT * FROM pg_catalog.pg_tables
+                WHERE schemaname != 'pg_catalog' AND
+                    schemaname != 'information_schema';
+            ''',
+            style={'width': '100%', 'height': 100},
+        ),
+        html.Button('Execute', id='execute-query', n_clicks=0),
+        html.Div(id='query-result'),
     ]
 )
 
@@ -376,13 +427,27 @@ def change_image(selected_value):
      ddep.Output("companyName", "options"),
      ddep.Output("warning-container", "children")],
 
-    [ddep.Input('companyName', 'value')]
+    [ddep.Input('companyName', 'value'),
+     ddep.Input('compA-button', 'className'),
+     ddep.Input('compB-button', 'className'),
+     ddep.Input('amsterdam-button', 'className'),
+     ]
 )
-def update_search_bar_height(selected_items):
-    options = getAllName()
+def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class):
+    getFromMarket = []
+    markets = getAllMarket()
+    if "toggle-on" in compA_class:
+        getFromMarket.append(markets.index('compA')+1)
+    if "toggle-on" in compB_class:
+        getFromMarket.append(markets.index('compB')+1)
+    if "toggle-on" in amsterdam_class:
+        getFromMarket.append(markets.index('amsterdam')+1)
+
+    options = getAllNameFromMarket(getFromMarket)
     input_warning = None
     height = 15
     if (selected_items != None):
+        options += selected_items
         row = len(selected_items) // 3
         height = 15 + row * 35  # Adjust as needed
         if len(selected_items) >= 6:
@@ -414,6 +479,50 @@ def update_log_button_class(n_clicks):
 )
 def update_bollinger_button_class(n_clicks):
     if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
+
+
+@ app.callback(
+    ddep.Output('compA-button', 'className'),
+    ddep.Input('compA-button', 'n_clicks')
+)
+def update_compA_button_class(n_clicks):
+    if n_clicks % 2 == 1:
+        return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
+
+
+@ app.callback(
+    ddep.Output('compB-button', 'className'),
+    ddep.Input('compB-button', 'n_clicks')
+)
+def update_compB_button_class(n_clicks):
+    if n_clicks % 2 == 1:
+        return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
+
+
+@ app.callback(
+    ddep.Output('PEA-PME-button', 'className'),
+    ddep.Input('PEA-PME-button', 'n_clicks')
+)
+def update_PEA_PME_button_class(n_clicks):
+    if n_clicks % 2 == 1:
+        return 'toggle-button toggle-off'
+    else:
+        return 'toggle-button toggle-on'
+
+
+@ app.callback(
+    ddep.Output('amsterdam-button', 'className'),
+    ddep.Input('amsterdam-button', 'n_clicks')
+)
+def update_amsterdam_button_class(n_clicks):
+    if n_clicks % 2 == 1:
         return 'toggle-button toggle-off'
     else:
         return 'toggle-button toggle-on'
@@ -1007,11 +1116,12 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 @app.callback(
     [ddep.Output('pie-chart', 'children'),
      ddep.Output('input-chart', 'children'),
-     ddep.Output('pepito', 'children')],
+     ddep.Output('pepito', 'children'),
+     ddep.Output('title-pie-chart', 'style')],
     [ddep.Input('companyName', 'value'),
      ddep.Input('input-chart', 'children')]
 )
-def update_search_bar_height(selected_items, input_repartition):
+def update_chart(selected_items, input_repartition):
     if selected_items is None or len(selected_items) == 0:
         return ([
             html.P(
@@ -1024,7 +1134,8 @@ def update_search_bar_height(selected_items, input_repartition):
                 ]
             ),
             dcc.Markdown('''32'''),
-            dcc.Markdown('''42''')
+            dcc.Markdown('''42'''),
+            {'display': 'none'}
         ])
 
     selected_options = []
@@ -1058,7 +1169,7 @@ def update_search_bar_height(selected_items, input_repartition):
         paper_bgcolor='#131312',  # Couleur de fond du graphique
         plot_bgcolor='#131312')
     # Create input
-    return dcc.Graph(figure=fig), selected_options, dcc.Markdown(f'''{input_repartition}''')
+    return dcc.Graph(figure=fig), selected_options, dcc.Markdown(f'''{input_repartition}'''), {'display': 'block'}
 
 
 @app.callback(ddep.Output('query-result', 'children'),

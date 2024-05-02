@@ -558,6 +558,11 @@ input[type="radio"] {
   background-color: #333;
 }
 
+.Select-menu-outer {
+  background-color: #1A1B1B !important;
+  border-color: #777 !important;
+}
+
 /* chart type */
 .chart-options {
   margin-left: 20px;
@@ -839,6 +844,10 @@ input[type="radio"] {
   padding: 20px 20px 0px 20px;
 }
 
+#title-pie-chart.card.card-shadow{
+  display: none;
+}
+
 /*toggle button*/
 .toggle-button{
   height: 40px !important;
@@ -897,4 +906,19 @@ input[type="radio"] {
 
 .dash-table-container .previous-next-container button.previous-page:hover{
   color: #F1C086 !important;
+}
+
+/* filter */
+.filter{
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.filter-img{
+  padding: 10px;
+}
+
+#filter-img.material-symbols-outlined{
+  font-size: 40px;
 }
