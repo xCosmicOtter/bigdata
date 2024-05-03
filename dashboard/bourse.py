@@ -52,12 +52,23 @@ def getAllName():
     return list_name_symbol
 
 
-def getAllNameFromMarket(mids):
+def getAllNameFromMarket(mids, isPea, isBoursorama: str):
+    if (mids == []):
+        return []
     str = []
     for i in mids:
         str.append(f' mid = {i} ')
-    whstr = "where " + "or".join(str) if len(str) != 0 else ""
-    query = f'''select name, symbol from companies {whstr};'''
+    whstr = "where (" + "or".join(str) + ")" if len(str) != 0 else ""
+
+    peastr = ""
+    if (isPea != None):
+        peastr = (" where " if whstr == "" else " and ") + f"pea = {isPea}"
+
+    bourstr = ""
+    if (isBoursorama != None):
+        bourstr = " and " + f"boursorama = \'{isBoursorama}\'"
+
+    query = f'''select name, symbol from companies {whstr + peastr + bourstr};'''
     df = pd.read_sql_query(query, engine)
     name_symbol_tuple = list(zip(df['name'], df['symbol']))
     list_name_symbol = [name + ' • ' +
@@ -137,37 +148,76 @@ app.layout = html.Div(
                         html.I(
                             className="material-symbols-outlined", id="filter-img", children="filter_alt")]
                     ),
-                    html.Div(
-                        className='market-selector',
+                    html.Div(className="selector", children=[
+                        html.Div(className="markets-filter",
+                                 children='Markets'),
+                        html.Div(
+                            className='market-selector',
+                            children=[
+                                html.Button(
+                                    children='All',
+                                    id='all-button',
+                                    className='toggle-button toggle-on',
+                                    n_clicks=0
+                                ),
+                                html.Button(
+                                    children='COMP A',
+                                    id='compA-button',
+                                    className='toggle-button toggle-off',
+                                    n_clicks=0
+                                ),
+                                html.Button(
+                                    children='COMP B',
+                                    id='compB-button',
+                                    className='toggle-button toggle-off',
+                                    n_clicks=0
+                                ),
+                                html.Button(
+                                    children='Amsterdam',
+                                    id='amsterdam-button',
+                                    className='toggle-button toggle-off',
+                                    n_clicks=0
+                                ),
+                            ]
+                        ),
+                        html.Div(className="eligility-filter",
+                                 children='Eligibility'),
+                        html.Div(
+                            className='eligility-selector',
+                            children=[
+                                html.Button(
+                                    children='All',
+                                    id='all-eli-button',
+                                    className='toggle-button toggle-on',
+                                    n_clicks=0
+                                ),
+                                html.Button(
+                                    children='Boursorama',
+                                    id='boursorama-button',
+                                    className='toggle-button toggle-off',
+                                    n_clicks=0
+                                ),
+                                html.Button(
+                                    children='PEA-PME',
+                                    id='peapme-button',
+                                    className='toggle-button toggle-off',
+                                    n_clicks=0
+                                )]),
+                    ])
+                ]),
+
+
+                html.Br(),
+                html.Div(
+                    className="card card-shadow", id="info-select", children=[html.P(
                         children=[
-                            html.Button(
-                                children='compA',
-                                id='compA-button',
-                                className='toggle-button toggle-on',
-                                n_clicks=0
-                            ),
-                            html.Button(
-                                children='compB',
-                                id='compB-button',
-                                className='toggle-button toggle-on',
-                                n_clicks=0
-                            ),
-                            html.Button(
-                                children='PEA-PME',
-                                id='PEA-PME-button',
-                                className='toggle-button toggle-on',
-                                n_clicks=0
-                            ),
-                            html.Button(
-                                children='Amsterdam',
-                                id='amsterdam-button',
-                                className='toggle-button toggle-on',
-                                n_clicks=0
-                            ),
+                            html.Span("NO DATA", className="no-data"),
+                            html.Span(
+                                " - ", style={'color': 'white', 'font-size': '20px'}),
+                            html.Span("PLEASE SELECT A COMPANY",
+                                      className="no-company")
                         ]
                     ),]),
-
-
                 html.Br(),
                 html.Div(
                     className="card card-shadow",
@@ -298,17 +348,22 @@ app.layout = html.Div(
                     className="card card-shadow",
                     children=[
                         html.Div(
-                            className='historical-text',
+                            className='value-rep-text',
                             children=[
                                 dcc.Markdown("""Value Repartition"""),
                             ]
                         ),
-                        html.Div(
-                            id="pie-chart"
-                        ),
-                        html.Div(
-                            id="input-chart"
-                        ),
+
+                        html.Div(className="box-chart", children=[
+                            html.Div(
+                                 id="pie-chart"
+                                 ),
+                            html.Div(
+                                id="input-chart",
+                                className="input-chart"
+                            ),
+                        ]),
+
                         html.Div(
                             id="pepito"
                         ),
@@ -338,6 +393,7 @@ app.layout = html.Div(
         ),
 
         html.Div(
+            id="stick-resume",
             className="three columns day-resume",
             children=[
                 html.Div(
@@ -431,19 +487,43 @@ def change_image(selected_value):
      ddep.Input('compA-button', 'className'),
      ddep.Input('compB-button', 'className'),
      ddep.Input('amsterdam-button', 'className'),
+     ddep.Input('peapme-button', 'className'),
+     ddep.Input('all-button', 'className'),
+     ddep.Input('all-eli-button', 'className'),
+     ddep.Input('boursorama-button', 'className'),
      ]
 )
-def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class):
-    getFromMarket = []
+def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class, pea_class, all_class, all_eli_class, boursorama_class):
+    options = []
     markets = getAllMarket()
-    if "toggle-on" in compA_class:
-        getFromMarket.append(markets.index('compA')+1)
-    if "toggle-on" in compB_class:
-        getFromMarket.append(markets.index('compB')+1)
-    if "toggle-on" in amsterdam_class:
-        getFromMarket.append(markets.index('amsterdam')+1)
+    isPea = None
+    isBoursorama = None
 
-    options = getAllNameFromMarket(getFromMarket)
+    if "toggle-off" in all_eli_class:
+        if "toggle-off" in pea_class:
+            isPea = False
+        else:
+            isPea = True
+
+        if "toggle-off" in boursorama_class:
+            isBoursorama = 'false'
+        else:
+            isBoursorama = 'true'
+
+    if "toggle-on" in all_class:
+        getFromMarket = [markets.index(
+            'compA') + 1, markets.index('compB') + 1, markets.index('amsterdam') + 1]
+        options = getAllNameFromMarket(getFromMarket, isPea, isBoursorama)
+    else:
+        getFromMarket = []
+        if "toggle-on" in compA_class:
+            getFromMarket.append(markets.index('compA')+1)
+        if "toggle-on" in compB_class:
+            getFromMarket.append(markets.index('compB')+1)
+        if "toggle-on" in amsterdam_class:
+            getFromMarket.append(markets.index('amsterdam')+1)
+        options = getAllNameFromMarket(getFromMarket, isPea, isBoursorama)
+
     input_warning = None
     height = 15
     if (selected_items != None):
@@ -485,51 +565,120 @@ def update_bollinger_button_class(n_clicks):
 
 
 @ app.callback(
+    ddep.Output('all-button', 'className'),
+    ddep.Output('all-button', 'children'),
+    ddep.Input('all-button', 'n_clicks')
+)
+def update_all_button_class(n_clicks):
+    if n_clicks % 2 == 1:
+        return 'toggle-button toggle-off', 'ALL'
+    else:
+        return 'toggle-button toggle-on', [
+            html.I(id="done-all-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="all-text-button", children='ALL')
+        ]
+
+
+@ app.callback(
     ddep.Output('compA-button', 'className'),
+    ddep.Output('compA-button', 'children'),
     ddep.Input('compA-button', 'n_clicks')
 )
 def update_compA_button_class(n_clicks):
-    if n_clicks % 2 == 1:
-        return 'toggle-button toggle-off'
+    if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off', 'COMP A'
     else:
-        return 'toggle-button toggle-on'
+        return 'toggle-button toggle-on', [
+            html.I(id="done-compA-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="compA-text-button", children='COMP A')
+        ]
 
 
 @ app.callback(
     ddep.Output('compB-button', 'className'),
+    ddep.Output('compB-button', 'children'),
     ddep.Input('compB-button', 'n_clicks')
 )
 def update_compB_button_class(n_clicks):
-    if n_clicks % 2 == 1:
-        return 'toggle-button toggle-off'
+    if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off', 'COMP B'
     else:
-        return 'toggle-button toggle-on'
+        return 'toggle-button toggle-on', [
+            html.I(id="done-compB-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="compB-text-button", children='COMP B')
+        ]
 
 
 @ app.callback(
-    ddep.Output('PEA-PME-button', 'className'),
-    ddep.Input('PEA-PME-button', 'n_clicks')
+    ddep.Output('peapme-button', 'className'),
+    ddep.Output('peapme-button', 'children'),
+    ddep.Input('peapme-button', 'n_clicks')
 )
 def update_PEA_PME_button_class(n_clicks):
-    if n_clicks % 2 == 1:
-        return 'toggle-button toggle-off'
+    if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off', 'PEA-PME'
     else:
-        return 'toggle-button toggle-on'
+        return 'toggle-button toggle-on', [
+            html.I(id="done-peapme-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="peapme-text-button", children='PEA-PME')
+        ]
 
 
 @ app.callback(
     ddep.Output('amsterdam-button', 'className'),
+    ddep.Output('amsterdam-button', 'children'),
     ddep.Input('amsterdam-button', 'n_clicks')
 )
 def update_amsterdam_button_class(n_clicks):
-    if n_clicks % 2 == 1:
-        return 'toggle-button toggle-off'
+    if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off', 'AMSTERDAM'
     else:
-        return 'toggle-button toggle-on'
+        return 'toggle-button toggle-on', [
+            html.I(id="done-amsterdam-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="amsterdam-text-button", children='AMSTERDAM')
+        ]
+
+
+@ app.callback(
+    ddep.Output('all-eli-button', 'className'),
+    ddep.Output('all-eli-button', 'children'),
+    ddep.Input('all-eli-button', 'n_clicks')
+)
+def update_all_button_class(n_clicks):
+    if n_clicks % 2 == 1:
+        return 'toggle-button toggle-off', 'ALL'
+    else:
+        return 'toggle-button toggle-on', [
+            html.I(id="done-all-eli-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="all-eli-text-button", children='ALL')
+        ]
+
+
+@ app.callback(
+    ddep.Output('boursorama-button', 'className'),
+    ddep.Output('boursorama-button', 'children'),
+    ddep.Input('boursorama-button', 'n_clicks')
+)
+def update_all_button_class(n_clicks):
+    if n_clicks % 2 == 0:
+        return 'toggle-button toggle-off', 'BOURSORAMA'
+    else:
+        return 'toggle-button toggle-on', [
+            html.I(id="done-boursorama-button",
+                   className="material-symbols-outlined", children="done"),
+            html.Div(className="boursorama-text-button", children='BOURSORAMA')
+        ]
 
 
 @ app.callback(
     [ddep.Output('dd-output-graph', 'children'),
+     ddep.Output('info-select', 'children'),
      ddep.Output('table-daystocks', 'children'),
      ddep.Output('table-daystocks', 'value'),
      ddep.Output('title-table-daystocks', 'style'),
@@ -565,6 +714,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
     """
     if not values:
         return (
+            None,
             html.P(
                 children=[
                     html.Span("NO DATA", className="no-data"),
@@ -581,7 +731,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             [],
             None,
             {'display': 'none'},
-            {'display': 'block'}
+            {'display': 'none'},
         )
 
     def generate_range_query(symbol: str, start: str, end: str, is_few_weeks: bool = False):
@@ -676,10 +826,11 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         columns = ['date', 'open', 'close', 'low', 'high',
                    'average', 'standard_deviation', 'volume']
 
-        begining_period = datetime.strptime(start, "%Y-%m-%d") if start else None
+        begining_period = datetime.strptime(
+            start, "%Y-%m-%d") if start else None
         ending_period = datetime.strptime(end, "%Y-%m-%d") if end else None
 
-        if not(start is None or end is None):
+        if not (start is None or end is None):
             period = ending_period - begining_period
             is_daystocks = period.days >= 30
         else:
@@ -687,7 +838,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 
         for value in values:
             symbol = value.split(" • ")[1]
-            query = generate_query(symbol, time_period, begining_period, ending_period, not is_daystocks)
+            query = generate_query(
+                symbol, time_period, begining_period, ending_period, not is_daystocks)
             company_df = pd.read_sql_query(query, engine)
 
             selected_companies.append(symbol)
@@ -1132,8 +1284,44 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         hovermode="x unified"
     )
 
+    def display_info_select(values: list):
+        res = []
+        markets = getAllMarket()
+        for value in values:
+            name = value.split(" • ")[0]
+            symbol = value.split(" • ")[1]
+            query = f'''select mid, boursorama, pea from companies where symbol = \'{symbol}\';'''
+            company = pd.read_sql_query(query, engine)
+            res.append(html.Div(style={'display': 'flex', 'padding-bottom': '20px'},
+                                children=[
+                                html.Div(children=f'{name}', style={
+                                         'padding-right': '20px', 'width': '200px', 'border-right': '1px dotted rgb(168, 162, 162)'}),
+                                html.Div(children=[
+                                    html.Div(f'SYMBOL : ', style={
+                                             'display': 'inline', 'padding-right': '10px'}),
+                                    html.Div(children=f'{symbol}', style={
+                                             'display': 'inline', 'width': '200px', 'background': '#F1C086', 'color': 'black', 'padding': '.5rem', 'border': '1px solid #3d3d3d2f'})
+                                ], style={'display': 'inline', 'padding-right': '20px', 'padding-left': '20px', 'width': '200px', 'border-right': '1px dotted rgb(168, 162, 162)'}),
+                                html.Div(children=[
+                                    html.Div(f'MARKET : ', style={
+                                             'display': 'inline', 'padding-right': '10px'}),
+                                    html.Div(children=f'{markets[company['mid'][0] - 1].upper()}', style={'display': 'inline', 'width': '200px', 'background': '#F1C086', 'color': 'black', 'padding': '.5rem', 'border': '1px solid #3d3d3d2f'})
+                                ], style={'display': 'inline', 'padding-right': '20px', 'padding-left': '20px', 'width': '200px', 'border-right': '1px dotted rgb(168, 162, 162)'}),
+                                html.Div(children=[
+                                    html.Div(f'ELIGIBILITY : ', style={
+                                             'display': 'inline', 'padding-right': '10px', 'padding-left': '20px'}),
+                                    html.Div(children=f'BOURSORAMA' if company['boursorama'][0] == 'true' else None,
+                                             style={'display': 'inline', 'width': '200px', 'background': '#F1C086', 'color': 'black', 'padding': '.5rem', 'border': '1px solid #3d3d3d2f', 'display': 'none' if (company['boursorama'][0] != 'true') else 'inline'}),
+                                    html.Div(children=f'PEA-PME' if company['pea'][0] == True else None,
+                                             style={'display': 'inline', 'width': '200px', 'background': '#F1C086', 'color': 'black', 'padding': '.5rem', 'border': '1px solid #3d3d3d2f', 'margin-left': '20px', 'display': 'none' if (company['pea'][0] != True) else 'inline'})
+                                ])
+                                ]))
+        return res
+
+    info_select = display_info_select(values)
     return (
         dcc.Graph(figure=fig),
+        info_select,
         tabs,
         values[-1].split(" • ")[1],
         {'display': 'block'} if len(tabs) >= 1 else {'display': 'none'},
@@ -1141,33 +1329,26 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         tabs_summary,
         values[-1].split(" • ")[1],
         {'display': 'flex'},
-        {'display': 'block'},
+        {'display': 'block'}
     )
 
 
-@app.callback(
+@ app.callback(
     [ddep.Output('pie-chart', 'children'),
      ddep.Output('input-chart', 'children'),
-     ddep.Output('pepito', 'children'),
-     ddep.Output('title-pie-chart', 'style')],
-    [ddep.Input('companyName', 'value'),
-     ddep.Input('input-chart', 'children')]
+     ddep.Output('title-pie-chart', 'style'),
+     ddep.Output('pepito', 'children')],
+    [ddep.Input('companyName', 'value')]
+
+
 )
-def update_chart(selected_items, input_repartition):
+def update_chart(selected_items):
     if selected_items is None or len(selected_items) == 0:
         return ([
-            html.P(
-                children=[
-                    html.Span("NO DATA", className="no-data"),
-                    html.Span(
-                        " - ", style={'color': 'white', 'font-size': '20px'}),
-                    html.Span("PLEASE SELECT A COMPANY",
-                              className="no-company")
-                ]
-            ),
-            dcc.Markdown('''32'''),
-            dcc.Markdown('''42'''),
-            {'display': 'none'}
+            None,
+            None,
+            {'display': 'none'},
+            None
         ])
 
     selected_options = []
@@ -1185,15 +1366,22 @@ def update_chart(selected_items, input_repartition):
 
         selected_options.append(
             daq.NumericInput(
-                label=companie.split(" • ")[0],
-                labelPosition='bottom',
+                label={'label': companie.split(" • ")[0], 'style': {
+                    'color': 'white', 'font-size': '16px', 'padding-left': '20px',
+                }},
                 value=1,
-                style={"display": 'inline-block'}
+                labelPosition='right',
+                style={'padding': '10px', 'justify-content': 'start'},
+                theme={
+                    'dark': True,
+                    'primary': '#00EA64',
+                    'secondary': '#6E6E6E',
+                }
             )
         )
-
     # Create initial pie chart
 
+    test = [option.value for option in selected_options]
     df_final = pd.concat(last_values)
     fig = px.pie(df_final, values='close', names='name', hole=0.3)
     fig.update_layout(
@@ -1201,13 +1389,13 @@ def update_chart(selected_items, input_repartition):
         paper_bgcolor='#131312',  # Couleur de fond du graphique
         plot_bgcolor='#131312')
     # Create input
-    return dcc.Graph(figure=fig), selected_options, dcc.Markdown(f'''{input_repartition}'''), {'display': 'block'}
+    return dcc.Graph(figure=fig), selected_options, {'display': 'block'}, dcc.Markdown(f'''{test}''')
 
 
-@app.callback(ddep.Output('query-result', 'children'),
-              ddep.Input('execute-query', 'n_clicks'),
-              ddep.State('sql-query', 'value'),
-              )
+@ app.callback(ddep.Output('query-result', 'children'),
+               ddep.Input('execute-query', 'n_clicks'),
+               ddep.State('sql-query', 'value'),
+               )
 def run_query(n_clicks, query):
     if n_clicks > 0:
         try:
