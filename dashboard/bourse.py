@@ -609,6 +609,9 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             }).reset_index()
 
             day_df.columns = columns
+            day_df['average'] = day_df['average'].round(3)
+            day_df['standard_deviation'] = day_df['standard_deviation'].round(3)
+
             selected_companies_5J_df.append(day_df)
 
         combined_df = pd.concat(selected_companies_df, keys=selected_companies)
