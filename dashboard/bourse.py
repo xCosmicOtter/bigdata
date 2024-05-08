@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 import plotly.express as px
 import plotly.graph_objs as go
 import dash_daq as daq
+from dash import ALL
+import warnings
 
 external_stylesheets = [
     # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -35,6 +37,8 @@ graph_options = [
         className="material-symbols-outlined", children="area_chart", style={'font-size': '35px', 'padding-top': '10px', 'color': '#F1C086'}), html.Div(
         "Area", style={'font-size': '18px', 'padding': '18px 20px 0px 20px', 'color': '#decfcf'})]), "value": "area"},
 ]
+
+select_dict = {}
 
 
 def getAllMarket():
@@ -78,6 +82,7 @@ def getAllNameFromMarket(mids, isPea, isBoursorama: str):
 
 app.layout = html.Div(
     children=[
+        dcc.Store(id='select-dict-store', data=select_dict),
         # Interval for live clock
         dcc.Interval(
             id='interval-component',
@@ -363,10 +368,6 @@ app.layout = html.Div(
                                 className="input-chart"
                             ),
                         ]),
-
-                        html.Div(
-                            id="pepito"
-                        ),
                     ]
                 ),
 
@@ -417,6 +418,7 @@ app.layout = html.Div(
                 )
             ]
         ),
+        dcc.Textarea(className="for-sticky", disabled=True, value=''''''),
         # dcc.Textarea(
         #     id='sql-query',
         #     value='''
@@ -481,7 +483,8 @@ def change_image(selected_value):
 @ app.callback(
     [ddep.Output('search', 'style'),
      ddep.Output("companyName", "options"),
-     ddep.Output("warning-container", "children")],
+     ddep.Output("warning-container", "children"),
+     ],
 
     [ddep.Input('companyName', 'value'),
      ddep.Input('compA-button', 'className'),
@@ -686,7 +689,9 @@ def update_all_button_class(n_clicks):
      ddep.Output('tabs-summary', 'children'),
      ddep.Output('tabs-summary', 'value'),
      ddep.Output('toolbar', 'style'),
-     ddep.Output('graph', 'style')],
+     ddep.Output('graph', 'style'),
+     ddep.Output('input-chart', 'children'),
+     ddep.Output('title-pie-chart', 'style')],
 
 
     [ddep.Input('companyName', 'value'),
@@ -695,10 +700,12 @@ def update_all_button_class(n_clicks):
      ddep.Input('log-button', 'className'),
      ddep.Input('bollinger-button', 'className'),
      ddep.Input('calendar-picker', 'start_date'),
-     ddep.Input('calendar-picker', 'end_date')]
+     ddep.Input('calendar-picker', 'end_date'),],
+    [ddep.State('select-dict-store', 'data')]
+
 )
 def display_graph_and_tabs(values: list, graphType: str, time_period: str, class_name_log: str,
-                           class_name_bollinger: str, start: str, end: str):
+                           class_name_bollinger: str, start: str, end: str, select_dict):
     """
     Callback function to display graphs and tabs based on selected inputs.
 
@@ -732,6 +739,8 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
             None,
             {'display': 'none'},
             {'display': 'none'},
+            None,
+            {'display': 'none'}
         )
 
     def generate_range_query(symbol: str, start: str, end: str, is_few_weeks: bool = False):
@@ -765,7 +774,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         Returns:
             tuple: SQL query and flag indicating if it's day stocks.
         """
-        is_calendar_available = not (start is None or end is None)
+        is_calendar_available = (start != None and end != None)
         if is_calendar_available:
             return generate_range_query(symbol, start, end, is_few_weeks)
 
@@ -1319,6 +1328,31 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         return res
 
     info_select = display_info_select(values)
+
+    def create_input_pie_chart(selected_items):
+        selected_options = []
+        for i, companie in enumerate(selected_items):
+            companie_name = companie.split(" • ")[0]
+            selected_options.append(
+                daq.NumericInput(
+                    id={"item": str(i)},
+                    label={'label': companie.split(" • ")[0], 'style': {
+                        'color': 'white', 'font-size': '16px', 'padding-left': '20px',
+                    }},
+                    value=select_dict.get(companie_name, 1),
+                    max=9999,
+                    labelPosition='right',
+                    style={'padding': '10px 10px 10px 100px',
+                           'justify-content': 'start'},
+                    theme={
+                        'dark': True,
+                        'primary': '#00EA64',
+                        'secondary': '#6E6E6E',
+                    }
+                )
+            )
+        return selected_options
+    inputs_chart = create_input_pie_chart(values)
     return (
         dcc.Graph(figure=fig),
         info_select,
@@ -1329,31 +1363,36 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
         tabs_summary,
         values[-1].split(" • ")[1],
         {'display': 'flex'},
+        {'display': 'block'},
+        inputs_chart,
         {'display': 'block'}
     )
 
 
 @ app.callback(
-    [ddep.Output('pie-chart', 'children'),
-     ddep.Output('input-chart', 'children'),
-     ddep.Output('title-pie-chart', 'style'),
-     ddep.Output('pepito', 'children')],
-    [ddep.Input('companyName', 'value')]
-
-
+    ddep.Output('select-dict-store', 'data'),
+    [ddep.Input({"item": ALL}, 'value'), ddep.Input({"item": ALL}, 'label')],
+    [ddep.State('select-dict-store', 'data')]
 )
-def update_chart(selected_items):
-    if selected_items is None or len(selected_items) == 0:
-        return ([
-            None,
-            None,
-            {'display': 'none'},
-            None
-        ])
+def update_select_dict(values_list, labels_list, select_dict):
+    for label, value in zip(labels_list, values_list):
+        select_dict[label['label']] = value
+    return select_dict
 
-    selected_options = []
+
+@ app.callback(
+    ddep.Output('pie-chart', 'children'),
+    [ddep.Input('companyName', 'value'),
+     ddep.Input('select-dict-store', 'data')]
+)
+def update_chart(selected_items, select_dict):
+    color_list = ['#F1C086', '#86BFF1', '#C1F186',
+                  '#D486F1', '#F1E386', '#F186C3']
+    if (selected_items == None):
+        return None
     last_values = []
-    for companie in selected_items:
+    for i, companie in enumerate(selected_items):
+        companie_name = companie.split(" • ")[0]
         symbol = companie.split(" • ")[1]
         query = f"""
                 SELECT date, close
@@ -1361,35 +1400,25 @@ def update_chart(selected_items):
                 WHERE cid = (SELECT id FROM companies WHERE symbol = '{symbol}')
                 ORDER BY date desc limit 1"""
         current_df = pd.read_sql_query(query, engine)
-        current_df['name'] = companie.split(" • ")[0]
+        current_df['name'] = companie_name
+        current_df['total_value'] = current_df['close'] * \
+            select_dict.get(companie_name, 1)
         last_values.append(current_df)
 
-        selected_options.append(
-            daq.NumericInput(
-                label={'label': companie.split(" • ")[0], 'style': {
-                    'color': 'white', 'font-size': '16px', 'padding-left': '20px',
-                }},
-                value=1,
-                labelPosition='right',
-                style={'padding': '10px', 'justify-content': 'start'},
-                theme={
-                    'dark': True,
-                    'primary': '#00EA64',
-                    'secondary': '#6E6E6E',
-                }
-            )
-        )
     # Create initial pie chart
 
-    test = [option.value for option in selected_options]
     df_final = pd.concat(last_values)
-    fig = px.pie(df_final, values='close', names='name', hole=0.3)
+    fig = px.pie(df_final, values='total_value', names='name', hole=0.3)
+    fig.update_traces(marker=dict(
+        colors=[color_list[i] for i, _ in enumerate(df_final['name'])]))
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor='#131312',  # Couleur de fond du graphique
-        plot_bgcolor='#131312')
+        paper_bgcolor='#131312',
+        plot_bgcolor='#131312',
+        width=1000,
+        height=600)
     # Create input
-    return dcc.Graph(figure=fig), selected_options, {'display': 'block'}, dcc.Markdown(f'''{test}''')
+    return dcc.Graph(figure=fig)
 
 
 @ app.callback(ddep.Output('query-result', 'children'),
