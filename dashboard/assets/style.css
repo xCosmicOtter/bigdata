@@ -558,6 +558,11 @@ input[type="radio"] {
   background-color: #333;
 }
 
+.Select-menu-outer {
+  background-color: #1A1B1B !important;
+  border-color: #777 !important;
+}
+
 /* chart type */
 .chart-options {
   margin-left: 20px;
@@ -736,7 +741,7 @@ input[type="radio"] {
 
 /* day resume */
 .day-resume{
-  padding: 194px 64px 64px 32px;
+  padding: 15% 64px 64px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -744,7 +749,8 @@ input[type="radio"] {
 }
 
 /* historical table */
-.historical-text{
+.historical-text,
+.value-rep-text{
   padding-top: 20px;
   padding-bottom: 20px;
   font-size: 16px ;
@@ -794,7 +800,6 @@ input[type="radio"] {
 /* card */
 .card{
   width: 100%;
-  height: 100%;
   background: #1A1B1B;
   padding:2rem;
   border: 1px solid #3d3d3d2f;
@@ -820,7 +825,14 @@ input[type="radio"] {
 
 /* display none to not show when first load page */
 #resume-text.card.card-shadow{
-  display: none
+  display: none;
+}
+
+#stick-resume{
+  position: sticky;
+  top: 15%;
+  bottom: 15% ;
+  z-index: 30;
 }
 
 #title-table-daystocks.card.card-shadow{
@@ -835,8 +847,12 @@ input[type="radio"] {
   display: none
 }
 
-#graph.card.card-shadow p{
+#info-select.card.card-shadow p{
   padding: 20px 20px 0px 20px;
+}
+
+#title-pie-chart.card.card-shadow{
+  display: none;
 }
 
 /*toggle button*/
@@ -871,13 +887,11 @@ input[type="radio"] {
 .no-company{
   font-size: 20px;
   color: #F1C086;
-  padding-bottom: 20px;  
 }
 
 .no-data{
   color: red;
   font-size: 20px;
-  padding-bottom: 20px;
 }
 
 /*button table */
@@ -897,4 +911,95 @@ input[type="radio"] {
 
 .dash-table-container .previous-next-container button.previous-page:hover{
   color: #F1C086 !important;
+}
+
+/* filter */
+.filter{
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+#filter-img.material-symbols-outlined{
+  font-size: 40px;
+}
+
+.selector{
+  display: flex;
+  flex-direction: column;
+}
+
+.markets-filter{
+  padding-left: 10px;
+  padding-top: 20px;
+  color:#b99262;
+}
+.eligility-filter
+{
+  padding-top: 10px;
+  padding-left: 10px;
+  color:#b99262;
+}
+
+#compA-button.toggle-button,
+#compB-button.toggle-button,
+#amsterdam-button.toggle-button,
+#all-button.toggle-button,
+#peapme-button.toggle-button,
+#boursorama-button.toggle-button,
+#all-eli-button.toggle-button{
+  border-radius: 5rem;
+  font-size: 13px;
+}
+
+.compA-text-button,
+.all-text-button,
+.compB-text-button,
+.amsterdam-text-button,
+.peapme-text-button,
+.boursorama-text-button,
+.all-eli-text-button{
+  display: inline;
+  padding-left: 10px;
+}
+
+#done-compA-button.material-symbols-outlined,
+#done-all-button.material-symbols-outlined,
+#done-compB-button.material-symbols-outlined,
+#done-amsterdam-button.material-symbols-outlined,
+#done-peapme-button.material-symbols-outlined,
+#done-all-eli-button.material-symbols-outlined,
+#done-boursorama-button.material-symbols-outlined{
+  vertical-align: middle;
+  font-size:20px;
+}
+
+/* pie chart */
+.box-chart {
+  display: flex;
+}
+
+.input-chart{
+  display: flex;
+  flex-direction: column;
+}
+
+.daq-numericinput--light__label{
+  justify-content: start !important;
+}
+
+.daq-numericinput--dark__label{
+  justify-content: start !important;
+}
+
+.for-sticky{
+  width: 100%;
+  height: 0px !important;
+  min-height: 0px !important;
+  padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: inherit;
 }
