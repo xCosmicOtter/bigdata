@@ -1359,7 +1359,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
                     value=select_dict.get(companie_name, 1),
                     max=9999,
                     labelPosition='right',
-                    style={'padding': '10px 10px 10px 100px',
+                    style={'padding': '10px 10px 10px 50px',
                            'justify-content': 'start'},
                     theme={
                         'dark': True,
@@ -1432,8 +1432,8 @@ def update_chart(selected_items, select_dict):
         template="plotly_dark",
         paper_bgcolor='#131312',
         plot_bgcolor='#131312',
-        width=1000,
-        height=600)
+        width=800,
+        height=400)
     # Create input
     return dcc.Graph(figure=fig)
 
