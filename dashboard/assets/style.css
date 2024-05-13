@@ -742,7 +742,7 @@ input[type="radio"] {
 
 /* day resume */
 .day-resume{
-  padding: 15% 64px 64px 32px;
+  padding: 3% 64px 64px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
