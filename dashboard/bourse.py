@@ -1461,7 +1461,8 @@ def update_chart(selected_items, select_dict):
         last_values.append(current_df)
 
     # Create initial pie chart
-
+    if len(last_values) == 0:
+        return None
     df_final = pd.concat(last_values)
     fig = px.pie(df_final, values='total_value', names='name', hole=0.3)
     fig.update_traces(marker=dict(
