@@ -61,13 +61,14 @@ Above, an image of our project dashboard.
 
 This dashboard includes numerous features:
 
+- A progress bar representing the status of the analyzer part, which fill all the SQL tables.
 - The selection of one or more actions (up to 6 maximum) can be displayed simultaneously on the dashboard.
 
 -  The graphical representation of stock data can be linear, area and candle sticks.
 - The representation of volumes associated with stocks can be displayed only when a single stock is selected.
 - Buttons below the graph allow switching to logarithmic scale or displaying Bollinger Bands.
 - A filter by market and eligibility (Boursorma/PEAPME)
-- The summary of the latest day recorded (the highest value, the lowest value, the opening value, the closing value, and the volume of shares traded).
+- The summary of the latest day recorded (the highest value, the lowest value, the opening value, the closing value, and the volume of shares traded) that can follow the user when the page is scrolled.
 
 - A table representing the historical values of a stock by day.
--
+- A pie chart representing the value of user investments. When companies are selected, allow the user to choose the number of shares held. The total investment value is divided graphically based on the number and value of each share.
