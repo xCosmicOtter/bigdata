@@ -10,7 +10,7 @@ SITE_RICOU_LINK = https://www.lrde.epita.fr/~ricou/pybd/projet/boursorama.tar
 fast:
 	@$(MAKE) -C $(DOCKER_ANALYZER_MAKE) fast
 	@$(MAKE) -C $(DOCKER_DASHBOARD_MAKE) fast
-	@sleep 8 && firefox 127.0.0.1:8050 &
+	@sleep 9 && firefox 127.0.0.1:8050 &
 	@cd docker && docker compose up
 
 all:

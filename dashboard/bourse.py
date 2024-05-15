@@ -579,8 +579,8 @@ def update_progress(n):
             """
     get_id = pd.read_sql_query(query, engine)
     progress = int(get_id.loc[0, 'nbr']) if len(get_id['nbr']) != 0 else 0
-    #progression_text = dcc.Markdown(f"""""")
-    return progress, f"Processing Progression: {progress // files_to_process}%"
+    pctg = round(progress / files_to_process * 100, 1) if progress != files_to_process else 100
+    return progress, f"Processing Progression: {pctg}%"
 
 
 @ app.callback(
