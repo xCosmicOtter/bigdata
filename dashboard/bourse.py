@@ -11,6 +11,7 @@ import plotly.graph_objs as go
 import dash_daq as daq
 from dash import ALL
 import warnings
+import os
 
 external_stylesheets = [
     # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -21,6 +22,8 @@ external_stylesheets = [
 DATABASE_URI = 'timescaledb://ricou:monmdp@db:5432/bourse'    # inside docker
 # DATABASE_URI = 'timescaledb://ricou:monmdp@localhost:5432/bourse'  # outisde docker
 engine = sqlalchemy.create_engine(DATABASE_URI)
+
+files_to_process = 271325
 
 app = dash.Dash(__name__,  title="Bourse", suppress_callback_exceptions=True,
                 external_stylesheets=external_stylesheets)
@@ -109,41 +112,69 @@ app.layout = html.Div(
         html.Div(
             className="eight columns div-left-panel",
             children=[
-                html.Div(
-                    id='search',
-                    className='search',
-                    children=[
-                        html.I(className='material-icons', children='search'),
-                        dcc.Dropdown(
-                            placeholder="Select a company",
-                            id='companyName',
-                            style={
-                                'flex': '1',
-                                'background': '#f6f6f6',
-                                'transition': 'box-shadow 0.25s',
-                                'border': 'none',     # Apply border style
-                                'outline': 'none',    # Apply outline style
-                                'background-color': 'transparent',  # Apply background color style
-                                'box-shadow': 'none',
-                            },
-                            options=getAllName(),
-                            multi=True,
-                        ),
-                        html.Div(id="warning-container",
-                                 className="warning-container"),
-                    ]
-                ),
+                html.Div(className="main-container", children=[
+                    html.Div(
+                        id='search',
+                        className='search',
+                        children=[
+                            html.I(className='material-icons', children='search'),
+                            dcc.Dropdown(
+                                placeholder="Select a company",
+                                id='companyName',
+                                style={
+                                    'flex': '1',
+                                    'background': '#f6f6f6',
+                                    'transition': 'box-shadow 0.25s',
+                                    'border': 'none',     # Apply border style
+                                    'outline': 'none',    # Apply outline style
+                                    'background-color': 'transparent',  # Apply background color style
+                                    'box-shadow': 'none',
+                                },
+                                options=getAllName(),
+                                multi=True,
+                            ),
+                            html.Div(id="warning-container",
+                                     className="warning-container"),
+                        ]
+                    ),
+                    html.Div(
+                        className="card-progression-bar-shadow",
+                        id="progression-bar-text",
+                        children=[
+                            html.Div(
+                                className="progression-bar-text",
+                                children=[
+                                    dcc.Markdown(
+                                        id="progress-text-pertg",
+                                        children="""Processing Progression"""
+                                    )
+                                ]
+                            ),
+                            dcc.Interval(
+                                id='interval-component-progress',
+                                interval=10*1000,  # in milliseconds
+                                n_intervals=0
+                            ),
+                            html.Progress(
+                                id='progress-bar',
+                                value=0,
+                                max=files_to_process
+                            ),
+                        ]
+                    ),
+                ]),
 
                 html.Br(),
-
                 html.Div(className="filter", children=[
                     html.Div(className="filter-img", children=[
                         html.I(
                             className="material-symbols-outlined", id="filter-img", children="filter_alt")]
                     ),
-                    html.Div(className="selector", children=[
+                    html.Div(
+                        className="selector",
+                        children=[
                         html.Div(className="markets-filter",
-                                 children='Markets'),
+                                children='Markets'),
                         html.Div(
                             className='market-selector',
                             children=[
@@ -174,7 +205,7 @@ app.layout = html.Div(
                             ]
                         ),
                         html.Div(className="eligility-filter",
-                                 children='Eligibility'),
+                                children='Eligibility'),
                         html.Div(
                             className='eligility-selector',
                             children=[
@@ -195,7 +226,9 @@ app.layout = html.Div(
                                     id='peapme-button',
                                     className='toggle-button toggle-off',
                                     n_clicks=0
-                                )]),
+                                )
+                            ]
+                        ),
                     ])
                 ]),
 
@@ -531,6 +564,23 @@ def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class,
                 for option in options
             ]
     return {'height': f'{height}px'}, options, input_warning
+
+
+# Define callback to update progress bar
+@app.callback(
+    [ddep.Output('progress-bar', 'value'),
+    ddep.Output('progress-text-pertg', 'children')],
+    [ddep.Input('interval-component-progress', 'n_intervals')]
+)
+def update_progress(n):
+    query = """
+            SELECT COUNT(DISTINCT name) AS nbr
+            FROM file_done;
+            """
+    get_id = pd.read_sql_query(query, engine)
+    progress = int(get_id.loc[0, 'nbr']) if len(get_id['nbr']) != 0 else 0
+    #progression_text = dcc.Markdown(f"""""")
+    return progress, f"Processing Progression: {progress // files_to_process}%"
 
 
 @ app.callback(

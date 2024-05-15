@@ -429,9 +429,9 @@ body{
 
 /* top panel */
 .logo {
-  width: 65%; 
-  max-width: 600px; 
-  height: auto; 
+  width: 65%;
+  max-width: 600px;
+  height: auto;
   margin-right: 20px;
 }
 
@@ -485,10 +485,42 @@ input[type="radio"] {
 }
 
 /* seach bar*/
+.main-container {
+  /*  */
+  display: flex;
+  flex-direction: row;
+}
+
+.card-progression-bar-shadow {
+  padding-left: 80px;
+  display: flex;
+  flex-direction: column;
+  width: 20%;
+}
+
+.progression-bar-text p {
+  padding-left: 5%;
+}
+
+progress[value] {
+  --color: #b99262;  /* the progress color */
+  --background: rgba(255, 255, 255, 0.5); /* the background color */
+
+  border: none; /* Firefox add a default border */
+  width: 210px;
+  height: 10px;
+  margin: 0 10px;
+  border-radius: 10em;
+  background: var(--background);
+}
+
+progress[value]::-moz-progress-bar {
+  border-radius: 10em;
+  background: var(--color);
+}
+
 .search {
   --padding: 15px 10px 10px 10px;
-
-  width: max-content;
   display: flex;
   align-items: center;
   padding: var(--padding);
