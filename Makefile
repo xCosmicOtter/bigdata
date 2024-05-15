@@ -2,7 +2,7 @@ DOCKER_ANALYZER_MAKE = docker/analyzer/
 DOCKER_DASHBOARD_MAKE = docker/dashboard/
 INIT_SCRIPT = ./init_boursorama.sh
 DOCKER_COMPOSE = docker/docker-compose.yaml
-DATA_DIR = docker/test
+DATA_DIR = docker/data
 ONEDRIVE_LINK = https://epitafr-my.sharepoint.com/:u:/r/personal/alexandre_devaux-riviere_epita_fr/Documents/boursorama.tar
 SITE_RICOU_LINK = https://www.lrde.epita.fr/~ricou/pybd/projet/boursorama.tar
 
