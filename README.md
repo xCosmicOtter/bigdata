@@ -18,18 +18,19 @@ Clone the project repository, then follow the instructions below:
 # Go to the project root
 cd bigdata
 
+# [All in One]
+# Directly Download, Extract and Run docker images
+make all
+
+# === OR === #
 # Make a directory with the path: docker/data/
 mkdir docker/data
 
 # Put the boursorama data inside "docker/data/"
 unzip boursorama.zip docker/data/
- 
-# Launch our app and write the data inside SQL database
-./launch_project
 
-# Wait a bit
-# If it does not work, use the same command again
-./launch_project
+# Launch our app and write the data inside SQL database
+make
 ```
 
 ## Methodology
