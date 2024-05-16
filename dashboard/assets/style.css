@@ -422,7 +422,7 @@ text color : #F1C086
 */
 body{
   background:  #141515;
-  color: #b2b2b2;
+  color: #d6d5d5;
   height: 100vh;
   margin: 0;
 }
@@ -740,6 +740,15 @@ progress[value]::-moz-progress-bar {
   color:#F1C086 !important;
   background-color: transparent !important;
 }
+
+/* days tab */
+.tab-disabled-style {
+  border-top: none !important;
+  border-bottom: 0.5px solid transparent !important;
+  color: #666 !important;
+  background-color: transparent !important;
+}
+
 
 #tabs-summary .tab--selected{
   color: #F1C086;

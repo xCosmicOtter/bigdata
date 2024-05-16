@@ -281,7 +281,7 @@ app.layout = html.Div(
                                                     label='1M',
                                                     className='tab-style',
                                                     selected_className='tab-selected-style',
-                                                    value='1M'
+                                                    value='1M',
                                                 ),
                                                 dcc.Tab(
                                                     label='3M',
@@ -307,7 +307,7 @@ app.layout = html.Div(
                                                     selected_className='tab-selected-style',
                                                     value='5A'
                                                 ),
-                                            ]
+                                            ],
                                         ),
 
                                         html.Div(
@@ -1488,6 +1488,110 @@ def update_chart(selected_items, select_dict):
         height=400)
     # Create input
     return dcc.Graph(figure=fig)
+
+
+@app.callback(
+    ddep.Output('tabs-day', 'children'),
+    [ddep.Input('calendar-picker', 'start_date'),
+     ddep.Input('calendar-picker', 'end_date'),]
+)
+def disable_tabs(start, end):
+    if start != None and end != None:
+        return [
+            dcc.Tab(
+                label='5J',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='5J',
+                disabled=True
+            ),
+            dcc.Tab(
+                label='1M',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='1M',
+                disabled=True
+            ),
+            dcc.Tab(
+                label='3M',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='3M',
+                disabled=True
+            ),
+            dcc.Tab(
+                label='1A',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='1A',
+                disabled=True
+            ),
+            dcc.Tab(
+                label='2A',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='2A',
+                disabled=True
+            ),
+            dcc.Tab(
+                label='5A',
+                className='tab-style-sep',
+                selected_className='tab-selected-style',
+                disabled_className='tab-disabled-style',
+                value='5A',
+                disabled=True
+            ),
+        ]
+    else:
+        return [
+            dcc.Tab(
+                label='5J',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                value='5J',
+                disabled=False
+            ),
+            dcc.Tab(
+                label='1M',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                value='1M',
+                disabled=False
+            ),
+            dcc.Tab(
+                label='3M',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                value='3M',
+                disabled=False
+            ),
+            dcc.Tab(
+                label='1A',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                value='1A',
+                disabled=False
+            ),
+            dcc.Tab(
+                label='2A',
+                className='tab-style',
+                selected_className='tab-selected-style',
+                value='2A',
+                disabled=False
+            ),
+            dcc.Tab(
+                label='5A',
+                className='tab-style-sep',
+                selected_className='tab-selected-style',
+                value='5A',
+                disabled=False
+            ),
+        ]
 
 
 @ app.callback(ddep.Output('query-result', 'children'),
