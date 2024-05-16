@@ -85,14 +85,21 @@ def getAllNameFromMarket(mids, isPea, isBoursorama: str):
 
 app.layout = html.Div(
     children=[
+        # html.Meta(httpEquiv="refresh", content="60"),
         dcc.Store(id='select-dict-store', data=select_dict),
         # Interval for live clock
         dcc.Interval(
             id='interval-component',
             interval=5000,  # Update every 5000 milliseconds (5 seconds)
-            n_intervals=0
+            n_intervals=0,
+            max_intervals=-1
         ),
-
+        dcc.Interval(
+            id='interval-component-search',
+            interval=60*1000,
+            n_intervals=0,
+            max_intervals=-1
+        ),
         html.Div(
             className="div-top-panel",
             children=[
@@ -117,7 +124,8 @@ app.layout = html.Div(
                         id='search',
                         className='search',
                         children=[
-                            html.I(className='material-icons', children='search'),
+                            html.I(className='material-icons',
+                                   children='search'),
                             dcc.Dropdown(
                                 placeholder="Select a company",
                                 id='companyName',
@@ -135,7 +143,7 @@ app.layout = html.Div(
                             ),
                             html.Div(id="warning-container",
                                      className="warning-container"),
-                        ]
+                        ],
                     ),
                     html.Div(
                         className="card-progression-bar-shadow",
@@ -153,7 +161,8 @@ app.layout = html.Div(
                             dcc.Interval(
                                 id='interval-component-progress',
                                 interval=10*1000,  # in milliseconds
-                                n_intervals=0
+                                n_intervals=0,
+                                max_intervals=-1
                             ),
                             html.Progress(
                                 id='progress-bar',
@@ -173,63 +182,63 @@ app.layout = html.Div(
                     html.Div(
                         className="selector",
                         children=[
-                        html.Div(className="markets-filter",
-                                children='Markets'),
-                        html.Div(
-                            className='market-selector',
-                            children=[
-                                html.Button(
-                                    children='All',
-                                    id='all-button',
-                                    className='toggle-button toggle-on',
-                                    n_clicks=0
-                                ),
-                                html.Button(
-                                    children='COMP A',
-                                    id='compA-button',
-                                    className='toggle-button toggle-off',
-                                    n_clicks=0
-                                ),
-                                html.Button(
-                                    children='COMP B',
-                                    id='compB-button',
-                                    className='toggle-button toggle-off',
-                                    n_clicks=0
-                                ),
-                                html.Button(
-                                    children='Amsterdam',
-                                    id='amsterdam-button',
-                                    className='toggle-button toggle-off',
-                                    n_clicks=0
-                                ),
-                            ]
-                        ),
-                        html.Div(className="eligility-filter",
-                                children='Eligibility'),
-                        html.Div(
-                            className='eligility-selector',
-                            children=[
-                                html.Button(
-                                    children='All',
-                                    id='all-eli-button',
-                                    className='toggle-button toggle-on',
-                                    n_clicks=0
-                                ),
-                                html.Button(
-                                    children='Boursorama',
-                                    id='boursorama-button',
-                                    className='toggle-button toggle-off',
-                                    n_clicks=0
-                                ),
-                                html.Button(
-                                    children='PEA-PME',
-                                    id='peapme-button',
-                                    className='toggle-button toggle-off',
-                                    n_clicks=0
-                                )
-                            ]
-                        ),
-                    ])
+                            html.Div(className="markets-filter",
+                                     children='Markets'),
+                            html.Div(
+                                className='market-selector',
+                                children=[
+                                    html.Button(
+                                        children='All',
+                                        id='all-button',
+                                        className='toggle-button toggle-on',
+                                        n_clicks=0
+                                    ),
+                                    html.Button(
+                                        children='COMP A',
+                                        id='compA-button',
+                                        className='toggle-button toggle-off',
+                                        n_clicks=0
+                                    ),
+                                    html.Button(
+                                        children='COMP B',
+                                        id='compB-button',
+                                        className='toggle-button toggle-off',
+                                        n_clicks=0
+                                    ),
+                                    html.Button(
+                                        children='Amsterdam',
+                                        id='amsterdam-button',
+                                        className='toggle-button toggle-off',
+                                        n_clicks=0
+                                    ),
+                                ]
+                            ),
+                            html.Div(className="eligility-filter",
+                                     children='Eligibility'),
+                            html.Div(
+                                className='eligility-selector',
+                                children=[
+                                    html.Button(
+                                        children='All',
+                                        id='all-eli-button',
+                                        className='toggle-button toggle-on',
+                                        n_clicks=0
+                                    ),
+                                    html.Button(
+                                        children='Boursorama',
+                                        id='boursorama-button',
+                                        className='toggle-button toggle-off',
+                                        n_clicks=0
+                                    ),
+                                    html.Button(
+                                        children='PEA-PME',
+                                        id='peapme-button',
+                                        className='toggle-button toggle-off',
+                                        n_clicks=0
+                                    )
+                                ]
+                            ),
+                        ])
                 ]),
 
 
@@ -466,7 +475,6 @@ def update_clock(n_intervals):
 
     # Convert the offset to hours
     utc_offset_hours = utc_offset.total_seconds() / 3600
-
     return f"{local_time} (UTC+{int(utc_offset_hours)})"
 
 
@@ -515,9 +523,10 @@ def change_image(selected_value):
      ddep.Input('all-button', 'className'),
      ddep.Input('all-eli-button', 'className'),
      ddep.Input('boursorama-button', 'className'),
+     ddep.Input('interval-component-search', 'n_intervals')
      ]
 )
-def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class, pea_class, all_class, all_eli_class, boursorama_class):
+def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class, pea_class, all_class, all_eli_class, boursorama_class, n_intervals):
     options = []
     markets = getAllMarket()
     isPea = None
@@ -569,7 +578,9 @@ def update_search_bar(selected_items, compA_class, compB_class, amsterdam_class,
 # Define callback to update progress bar
 @app.callback(
     [ddep.Output('progress-bar', 'value'),
-    ddep.Output('progress-text-pertg', 'children')],
+     ddep.Output('progress-text-pertg', 'children'),
+     ddep.Output('interval-component-progress', 'max_intervals'),
+     ddep.Output('interval-component-search', 'max_intervals')],
     [ddep.Input('interval-component-progress', 'n_intervals')]
 )
 def update_progress(n):
@@ -579,8 +590,10 @@ def update_progress(n):
             """
     get_id = pd.read_sql_query(query, engine)
     progress = int(get_id.loc[0, 'nbr']) if len(get_id['nbr']) != 0 else 0
-    pctg = round(progress / files_to_process * 100, 1) if progress != files_to_process else 100
-    return progress, f"Processing Progression: {pctg}%"
+    pctg = round(progress / files_to_process * 100,
+                 1) if progress != files_to_process else 100
+    disable = 0 if pctg == 100 else -1
+    return progress, f"Processing Progression: {pctg}%", disable, disable
 
 
 @ app.callback(
