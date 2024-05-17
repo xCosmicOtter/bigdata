@@ -19,9 +19,9 @@ services:
       - $PWD/timescaledb:/var/lib/postgresql/data/timescaledb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ricou -d bourse"]
-      interval: 8s
-      timeout: 5s
-      retries: 15
+      interval: 10s
+      timeout: 8s
+      retries: 25
 
   analyzer:
     image: my_analyzer

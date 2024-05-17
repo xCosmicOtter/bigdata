@@ -131,7 +131,7 @@ def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_
 
 
 def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
-    stock_df = df[['symbol', 'last', 'volume']].copy().drop_duplicates()
+    stock_df = df[['symbol', 'last', 'volume']].copy()
     stock_df.reset_index(names='date', inplace=True)
 
     # Merge stock_df with compagnies_df to get the cid
@@ -145,7 +145,7 @@ def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.Time
 
 
 def compute_daystocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
-    daystocks_df = df.copy().drop_duplicates()
+    daystocks_df = df.copy()
     daystocks_df.reset_index(names="timestamp", inplace=True)
 
     # Apply aggregations
@@ -241,8 +241,10 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     print(f"Concatenating dataframes took {round(time.time() - start, 2)} seconds.")
 
     # CLEAN DATA
-    df.drop_duplicates(inplace=True)
     df.index = pd.to_datetime(df.index)
+    df.reset_index(inplace=True)
+    df.drop_duplicates(inplace=True)
+    df.set_index(keys='index', inplace=True)
     clean_values_volumes(df)
 
     # COMPUTE COMPANIES
