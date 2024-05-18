@@ -60,19 +60,8 @@ def get_files_done_count() -> int:
     get_id = db.raw_query(query)
     return int(get_id[0][0]) if len(get_id) != 0 else None
 
-def get_file_done_from_list(files_path: str) -> list:
-    query = f"""
-                SELECT file_name
-                FROM (
-                    VALUES {files_path}
-                ) AS files_to_process(file_name)
-                LEFT JOIN file_done ON files_to_process.file_name = file_done.name
-                WHERE file_done.name IS NULL;
-            """
-    get_file = db.raw_query(query)
-    return [element[0] for element in get_file] if len(get_file) != 0 else []
 
-# ---- Table processing functions ---- #
+# ---- SQL requests functions ---- #
 companies_dict = defaultdict(set)
 
 
@@ -251,12 +240,6 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
     print(f"Saving processed files took {round(time.time() - start, 2)} seconds.\n")
 
 
-# ---- Filer already processed files ---- #
-def filter_file_done(files: list) -> list:
-    placeholders = ', '.join(f"('{f}')" for f in files)
-    return get_file_done_from_list(placeholders)
-
-
 # ---- Main loop ---- #
 def main() -> None:
     # MAIN ARGS
@@ -295,19 +278,8 @@ def main() -> None:
 
                 market_id = get_market_id(market_name)
                 for month, files_list in sorted(month_dict.items(), reverse=True):
-                    current_files_length = len(files_list)
-                    files_count += current_files_length
-
-                    files_list = filter_file_done(files_list)
-
-                    if len(files_list) == 0:
-                        print(f"# [SKIPPING] {stock}/{market_name} ({month}/{year}).")
-                        continue
-
-                    if len(files_list) != current_files_length:
-                        print(f"# Loading remaining {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
-                    else:
-                        print(f"# Loading {current_files_length} files for {stock}/{market_name} ({month}/{year}).")
+                    files_count += len(files_list)
+                    print(f"# Loading {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
 
                     store_file(files_list, stock, market_name, market_id)
 
@@ -331,9 +303,9 @@ if __name__ == '__main__':
 
     if files_processed is None or files_processed == 0:
         main()
-    elif files_processed != files_to_process:
-        print(f"Files are missing: {files_to_process = } and {files_processed = }.\n")
-        main()
-    else:
+        print('Done.')
+    elif files_processed == files_to_process:
         print(f'Already Done on {files_processed} files.')
-    print('Done.')
+    else:
+        print(f"Files are missing: {files_to_process = } and {files_processed = }.\n",
+               "-> If this is not normal, please delete the TimescaleDB database and relaunch the program.")
