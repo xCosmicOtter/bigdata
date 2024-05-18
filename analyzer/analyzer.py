@@ -41,33 +41,6 @@ def count_files(directory: str) -> int:
     return file_count
 
 
-"""
-def replace_errors(group: pd.DataFrame) -> pd.DataFrame:
-    # First, Third Quantile and Inter Quantile
-    Q1 = group['last'].quantile(0.25)
-    Q3 = group['last'].quantile(0.75)
-
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 5 * IQR
-    upper_bound = Q3 + 5 * IQR
-
-    # Identify erroneous data
-    erroneous_indices = group['last'].index[(group['last'] < lower_bound) | (group['last'] > upper_bound)]
-
-    # Interpolate erroneous data
-    if len(erroneous_indices) == 0:
-        return group
-
-    # Replace erroneous values with NaN for interpolation
-    group.loc[erroneous_indices, 'last'] = np.nan
-
-    # Interpolate using linear interpolation
-    group['last'] = group['last'].interpolate(method='linear', limit_direction='both')
-
-    return group
-"""
-
-
 # ---- SQL requests functions ---- #
 def get_market_id(market_name: str) -> int:
     get_id = db.raw_query(
@@ -132,6 +105,9 @@ def compute_companies(df: pd.DataFrame, stock_name: str, market_id: int, market_
 
 def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.TimescaleStockMarketModel) -> None:
     stock_df = df[['symbol', 'last', 'volume']].copy()
+
+    # Apply deduplication
+    stock_df = stock_df[~stock_df.duplicated(keep='first') | ~stock_df.duplicated(keep='last')]
     stock_df.reset_index(names='date', inplace=True)
 
     # Merge stock_df with compagnies_df to get the cid
@@ -242,9 +218,6 @@ def store_file(files: list, website: str, market_name: str, market_id: int) -> N
 
     # CLEAN DATA
     df.index = pd.to_datetime(df.index)
-    df.reset_index(inplace=True)
-    df.drop_duplicates(inplace=True)
-    df.set_index(keys='index', inplace=True)
     clean_values_volumes(df)
 
     # COMPUTE COMPANIES
