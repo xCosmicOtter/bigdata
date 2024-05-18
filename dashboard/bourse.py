@@ -1346,7 +1346,7 @@ def display_graph_and_tabs(values: list, graphType: str, time_period: str, class
 
     # Ajout d'un titre général au graphique
     fig.update_layout(
-        title_text="Analyse des prix des actions et du volume",
+        title_text=f"Stock prices {'and volume ' if graph_dimension == 1 else ''}over time",
         template="plotly_dark",
         paper_bgcolor='#131312',  # Couleur de fond du graphique
         plot_bgcolor='#131312',
