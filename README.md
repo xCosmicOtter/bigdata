@@ -54,9 +54,9 @@ Many modifications had to be made to the raw data for their insertion into the d
 - To reduce the size of the data, we have decided to remove identical values from a horizontal segment, except for the first and last occurrence, in order to maintain an identical graph while having less data. This allowed us to reduce the number of rows in the stocks table from 367 million to 90 million.
 ## Dashboard
 
+![Dashboard Presentation GIF](dashboard/assets/dashboard.gif)
 
-
-Above, an image of our project dashboard.
+Above, a GIF of our project dashboard.
 
 ### Features
 
