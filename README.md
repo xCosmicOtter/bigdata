@@ -51,6 +51,7 @@ Many modifications had to be made to the raw data for their insertion into the d
 
 - We were instructed not to delete existing tables or data, but only to add to them. That's why we decided to add the `std` and `mean` columns to the `daystocks` table, which will make it easier for us to visualize the data on the dashboard later. Additionally, with the provided data, some companies are not listed in the default financial markets provided in the `markets` table. Since the IDs of the financial markets initially present start from index 1, we decided to associate the `market` for the unlisted companies with default index 0.
 
+- To reduce the size of the data, we have decided to remove identical values from a horizontal segment, except for the first and last occurrence, in order to maintain an identical graph while having less data. This allowed us to reduce the number of rows in the stocks table from 367 million to 90 million.
 ## Dashboard
 
 
