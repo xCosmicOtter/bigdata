@@ -107,7 +107,9 @@ def compute_stocks(df: pd.DataFrame, compagnies_df: pd.DataFrame, sdb: tsdb.Time
     stock_df = df[['symbol', 'last', 'volume']].copy()
 
     # Apply deduplication
-    stock_df = stock_df[~stock_df.duplicated(keep='first') | ~stock_df.duplicated(keep='last')]
+    mask_1 = stock_df.groupby('symbol').diff().ne(0).any(axis=1)
+    mask_2 = stock_df.groupby('symbol').diff(-1).ne(0).any(axis=1)
+    stock_df = stock_df[mask_1 | mask_2]
     stock_df.reset_index(names='date', inplace=True)
 
     # Merge stock_df with compagnies_df to get the cid
