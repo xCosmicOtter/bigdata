@@ -18,15 +18,16 @@ services:
     volumes:
       - $PWD/timescaledb:/var/lib/postgresql/data/timescaledb
     healthcheck:
-        test: ["CMD-SHELL", "pg_isready bourse"]
-        interval: 6s
-        timeout: 3s
-        retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ricou -d bourse"]
+      interval: 10s
+      timeout: 8s
+      retries: 25
 
   analyzer:
     image: my_analyzer
     depends_on:
-        - db
+      db:
+        condition: service_healthy
     networks:
       - boursenet
     volumes:
@@ -34,6 +35,9 @@ services:
 
   dashboard:
     image: my_dashboard
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - boursenet
     ports:

@@ -1,7 +1,7 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 MAINTAINER Olivier Ricou <olivier@ricou.eu.org>
 
-# If you have a web spider getting data, then you can run 
+# If you have a web spider getting data, then you can run
 # that analyzer every nigth (therefore cron)
 
 ENV DEBIAN_FRONTEND noninteractive
