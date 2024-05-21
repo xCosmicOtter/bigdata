@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM reg.undercloud.cri.epita.fr/docker/ubuntu:20.04
 MAINTAINER Olivier Ricou <olivier@ricou.eu.org>
 
 # If you have a web spider getting data, then you can run
