@@ -46,13 +46,15 @@ def split_list(list_files: list) -> tuple:
     for file_path in list_files:
         key = file_path.split(' ')[1]
         dict_split[key].append(file_path)
-
+    del list_files
+    
     keys = list(dict_split.keys())
     midpoint = len(keys) // 2
     list1 = [file for key in keys[:midpoint] for file in dict_split[key]]
     list2 = [file for key in keys[midpoint:] for file in dict_split[key]]
 
     return list1, list2
+
 
 # ---- SQL requests functions ---- #
 def get_market_id(market_name: str) -> int:
@@ -296,7 +298,7 @@ def main() -> None:
                     files_count += len(files_list)
                     print(f"# Loading {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
 
-                    if not(market_name == "amsterdam" and year == 2019):
+                    if not(market_name == "amsterdam" and year == "2019"):
                         store_file(files_list, stock, market_name, market_id)
                     else:
                         l1, l2 = split_list(files_list)
