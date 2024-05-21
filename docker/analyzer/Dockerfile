@@ -37,4 +37,8 @@ ADD apps.tgz .
 # CMD service cron start  && \
 #     tail -f /var/log/cron.log
 
-CMD python3 analyzer.py
+# Copy script used to wait DB on school podman service
+COPY wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
+
+CMD ["/wait-for-db.sh", "db", "python3", "analyzer.py"]

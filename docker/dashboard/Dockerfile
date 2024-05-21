@@ -1,5 +1,5 @@
-FROM reg.undercloud.cri.epita.fr/docker/python:3-bookworm
-#FROM ubuntu:latest
+#FROM reg.undercloud.cri.epita.fr/docker/python:3-bookworm
+FROM reg.undercloud.cri.epita.fr/docker/ubuntu:20.04
 MAINTAINER Olivier Ricou <olivier@ricou.eu.org>
 
 # Set noninteractive mode for apt-get
@@ -46,7 +46,11 @@ ENV PATH "${PATH}:/home/bourse/.local/bin/"
 
 ADD apps.tgz .
 
+# Copy script used to wait DB on school podman service
+COPY wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
+
 # Finally, run gunicorn.
 #CMD echo $PYTHONPATH; python3 bourse.py
-CMD [ "gunicorn", "--timeout=300", "--workers=5", "--threads=1", "-b 0.0.0.0:8050", "bourse:server"]
+CMD ["/wait-for-db.sh", "db" ,"gunicorn", "--timeout=300", "--workers=5", "--threads=1", "-b 0.0.0.0:8050", "bourse:server"]
 
