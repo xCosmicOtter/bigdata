@@ -41,6 +41,19 @@ def count_files(directory: str) -> int:
     return file_count
 
 
+def split_list(list_files: list) -> tuple:
+    dict_split = defaultdict(list)
+    for file_path in list_files:
+        key = file_path.split(' ')[1]
+        dict_split[key].append(file_path)
+
+    keys = list(dict_split.keys())
+    midpoint = len(keys) // 2
+    list1 = [file for key in keys[:midpoint] for file in dict_split[key]]
+    list2 = [file for key in keys[midpoint:] for file in dict_split[key]]
+
+    return list1, list2
+
 # ---- SQL requests functions ---- #
 def get_market_id(market_name: str) -> int:
     get_id = db.raw_query(
@@ -283,7 +296,14 @@ def main() -> None:
                     files_count += len(files_list)
                     print(f"# Loading {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
 
-                    store_file(files_list, stock, market_name, market_id)
+                    if not(market_name == "amsterdam" and year == 2019):
+                        store_file(files_list, stock, market_name, market_id)
+                    else:
+                        l1, l2 = split_list(files_list)
+                        print(f"==> First Half on {len(l1)} files")
+                        store_file(l1, stock, market_name, market_id)
+                        print(f"==> Second Half on {len(l2)} files")
+                        store_file(l2, stock, market_name, market_id)
 
                 subprocessing_time = round(time.time() - market_starting_time, 3)
                 print(f"# = Processing complete for {market_name} data in {year} in"
