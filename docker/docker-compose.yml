@@ -4,7 +4,7 @@ networks:
 
 services:
   db:
-    image: timescale/timescaledb:latest-pg16
+    image: reg.undercloud.cri.epita.fr/docker/timescale/timescaledb:latest-pg16
     command: postgres -c shared_preload_libraries=timescaledb
     ports:
       - "5432:5432"
