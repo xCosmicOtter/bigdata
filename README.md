@@ -33,6 +33,11 @@ unzip boursorama.zip docker/data/
 make
 ```
 
+/!\ 
+
+EPITA's computers using podman, some docker functionnalities may crash during the first start. If so, run the ```make``` command again.
+
+/!\
 ## Methodology
 
 ### Data Reading
