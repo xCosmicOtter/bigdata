@@ -298,7 +298,7 @@ def main() -> None:
                     files_count += len(files_list)
                     print(f"# Loading {len(files_list)} files for {stock}/{market_name} ({month}/{year}).")
 
-                    if not(market_name == "amsterdam" and year == "2019"):
+                    if len(files_list) < 1600:
                         store_file(files_list, stock, market_name, market_id)
                     else:
                         l1, l2 = split_list(files_list)
