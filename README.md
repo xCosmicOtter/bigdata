@@ -19,7 +19,7 @@ Clone the project repository, then follow the instructions below:
 cd bigdata
 
 # [All in One]
-# Directly Download, Extract and Run docker images
+# Directly Download, Extract boursorama.tar and Run docker images
 make all
 
 # === OR === #
@@ -27,7 +27,7 @@ make all
 mkdir docker/data
 
 # Put the boursorama data inside "docker/data/"
-unzip boursorama.zip docker/data/
+tar -xf  boursorama.tar -C docker/data/
 
 # Launch our app and write the data inside SQL database
 make
@@ -46,7 +46,7 @@ The analyzer should take ~45min to process the data on school computers.
 ### Data Reading
 
 
-Firstly, regarding file reading, we opted to process the data in descending order based on the date. Indeed, some companies have changed their names multiple times since their creation while retaining the same symbol. Therefore, we always keep the latest recorded name as the company's name. Since data reading is a tedious and time-consuming task, we decided to parallelize functions to the maximum extent possible to facilitate insertions into the tables.
+Firstly, regarding file reading, we opted to process the data in descending order based on the date. Indeed, some companies have changed their names multiple times since their creation while retaining the same symbol. Therefore, we always keep the latest recorded name as the company's name. Since data reading is a tedious and time-consuming task, we decided to parallelize functions to the maximum extent possible to facilitate insertions into the tables. To reduce time of preprocessing, we decided to add a threshold of 1600 files preprocessed by batchs (typically a month by batch). If the number of files to be preprocess is above this threshold, we divide this batch into two in order to avoid RAM problems.
 
 ### Data Handling
 
