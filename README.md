@@ -35,9 +35,12 @@ make
 
 /!\ 
 
-EPITA's computers using podman, some docker functionnalities may crash during the first start. If so, run the ```make``` command again.
+EPITA's computers using podman, some docker functionnalities may crash during the first start. It usually happen after the images and boursorama.tar download (when the analyzer's job begins ~10min after the ```make all``` command). If so, just ```Ctrl-C``` and run the ```make``` command again.
+
+The analyzer should take ~45min to process the data on school computers.
 
 /!\
+
 ## Methodology
 
 ### Data Reading
