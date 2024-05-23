@@ -1610,5 +1610,5 @@ def run_query(n_clicks, query):
 
 
 if __name__ == '__main__':
-    time.sleep(10)
+    time.sleep(25)
     app.run(debug=True)

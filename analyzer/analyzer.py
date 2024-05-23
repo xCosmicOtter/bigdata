@@ -321,7 +321,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    time.sleep(10)
+    time.sleep(20)
     data_directory = os.path.join(os.getcwd(), "data")
     files_processed = get_files_done_count()
     files_to_process = count_files(data_directory)
