@@ -81,3 +81,9 @@ This dashboard includes numerous features:
 
 - A table representing the historical values of a stock by day.
 - A pie chart representing the value of user investments. When companies are selected, allow the user to choose the number of shares held. The total investment value is divided graphically based on the number and value of each share.
+
+# Authors
+
+Alexandre Devaux-Riviere\
+Angelo Eap\
+Valentin San
